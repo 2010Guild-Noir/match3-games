@@ -2435,7 +2435,7 @@ const MAX_RANK_INDEX = RANKS.length - 1;
 const NORMALS=["SANZU","MUTSU","HANZO","CHIEKO","KUJAKU"];
 const SPECIALS=RANKS.map(r=>r.key);
 const JUSOS=["J_NEM", "J_SHI", "J_PRO"];
-const RANK_THRESH = [3, 3, 3, 3, 2];//ランクアップ闘値
+const RANK_THRESH =  [20, 100, 300, 500, 700];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 10, "S_NE0": 20, "S_SHU": 30, "S_REQ": 40, "S_UNK": 50 };
 
 let board=[], yAnim=[], score=store.get("score",0), rankIndex=store.get("rankIndex",0), rankProgress=store.get("rankProgress",0);
@@ -5675,7 +5675,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 5; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 800; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -6121,4 +6121,31 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
+<script>
+/* ====== 購入者キー一覧（ここに追加） ====== */
+const VALID_KEYS = [
+  "A1B2C3D4",
+  "X9Y8Z7W6",
+  "KLMN2026"
+];
 
+/* ====== URLからkey取得 ====== */
+const params = new URLSearchParams(window.location.search);
+const userKey = params.get("key");
+
+/* ====== ローカル保存 ====== */
+if(userKey && VALID_KEYS.includes(userKey)){
+  localStorage.setItem("game_key", userKey);
+}
+
+/* ====== 保存キー確認 ====== */
+const savedKey = localStorage.getItem("game_key");
+
+/* ====== 認証 ====== */
+if(!savedKey || !VALID_KEYS.includes(savedKey)){
+  document.body.innerHTML = `
+    <h2>⚠️ アクセスできません</h2>
+    <p>正しいURLからアクセスしてください。</p>
+  `;
+}
+</script>
