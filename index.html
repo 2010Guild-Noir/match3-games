@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
-  <title>焦土の門</title>
+  <title>修羅王丸 永遠の焦土パズル≪焦土の門≫</title>
   <meta name="format-detection" content="telephone=no" />
   <style>
     :root{
@@ -39,6 +39,39 @@
     .foot{margin-top:14px;color:var(--muted);font-size:12px;}
     .game{display:none;} .game.show{display:block;}
     .lock{display:block;} .lock.hide{display:none;}
+
+/* ====== PASSCODE SCREEN: Mincho (solemn) ====== */
+#lock,
+#lock .desc,
+#lock label,
+#lock input,
+#lock .foot,
+#lock .msg{
+  font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
+  letter-spacing:.04em;
+}
+
+#lock input::placeholder{
+  letter-spacing:.03em;
+}
+
+/* ====== btn-reset (same as game reset button) ====== */
+.btn-reset{ 
+  background:linear-gradient(180deg,#6e2222,#421515); 
+  border-color:#a53939; 
+  color:#ffeded; 
+  /* ボタンのホバー時の発光を赤系に */
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(255, 100, 100, 0);
+}
+.btn-reset:hover, .btn-reset.hover-glow{ 
+  transform:translateY(-1px); 
+  border-color:#c84f4f; 
+  box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(255, 100, 100, 0.5); /* 赤系発光 */
+}
+.btn-reset:active{ 
+  transform:translateY(0); 
+  box-shadow:0 6px 14px rgba(0,0,0,.44) inset; 
+}
   </style>
 </head>
 
@@ -49,14 +82,14 @@
         <h1 class="title">あなたの専用パスキーを入力してください</h1>
         <p class="desc">
           <b>1端末につき1パスキー</b>です。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/>
-          この端末で一度解錠したら、以後は入力不要でプレイできます（この端末に保存されます）。
+          この端末で一度解錠したら、以後は入力不要でプレイできます。
         </p>
 
         <label for="passcode">パスキー</label>
         <div class="row">
           <input id="passcode" inputmode="latin" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
                  name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
-          <button id="unlockBtn">焦土の門を開く</button>
+          <button id="unlockBtn" class="btn-reset">焦土の門を開く</button>
         </div>
 
         <div id="msg" class="msg"></div>
@@ -102,22 +135,6 @@ if (IS_IOS) { document.documentElement.classList.add('ios'); }
 <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png?v=1">
 <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png?v=1">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png?v=1">
-
-
-<!-- Open Graph / Facebook / LINE / Slack など -->
-<meta property="og:title" content="修羅王丸 永遠の焦土パズル">
-<meta property="og:description" content="あなたの指先が 焦土に《 華 》を咲かせる。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://2010guild-noir.github.io/match3-games_demo">
-<meta property="og:image" content="https://2010guild-noir.github.io/match3-games_demo/images/og.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-<!-- Twitter（X） -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="修羅王丸 永遠の焦土パズル">
-<meta name="twitter:description" content="あなたの指先が 焦土に《 華 》を咲かせる。。">
-<meta name="twitter:image" content="https://2010guild-noir.github.io/match3-games_demo/images/og_v2.jpg?v=2">
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
@@ -2218,7 +2235,7 @@ const CHARACTERS = [
   { sym: "KUJAKU", name: "クジャク", tag: "式神", desc: "修羅王丸の盟約たる式神。/ 通常の暗躍を担う。", image: "KUJAKU", unlock: { key: "initial" } },
 
   { sym: "S_BIR", name: "ミミック", tag: "修羅王丸", desc: "かつて人と共に在った修羅王丸。/ 縦列消去。", image: "S_BIR", unlock: { key: "rank", value: 0 } }, /* 0に修正 */
-  { sym: "S_NE0", name: "ネオレトロ", tag: "修羅王丸", desc: "人の姿を辞めた修羅王丸。/ 縦列＋両隣消去。", image: "S_NE0", unlock: { key: "rank", value: 1 } },
+  { sym: "S_NE0", name: "ネオレトロ", tag: "修羅王丸", desc: "人の姿をやめた修羅王丸。/ 縦列＋両隣消去。", image: "S_NE0", unlock: { key: "rank", value: 1 } },
   { sym: "S_SHU", name: "シンギュラ", tag: "修羅王丸", desc: "ネオレトロを斬り捨て顕現した存在。/ 周囲を菱形に消去。", image: "S_SHU", unlock: { key: "rank", value: 2 } },
   { sym: "S_REQ", name: "レクイエム", tag: "修羅王丸", desc: "新たな境地を求めて生まれた存在。/ 横列+上下隣消去。", image: "S_REQ", unlock: { key: "rank", value: 3 } },
   { sym: "S_UNK", name: "アンノウン", tag: "修羅王丸", desc: "未だ見ぬ先の境地。/ 斜め✕列消去。", image: "S_UNK", unlock: { key: "rank", value: 4 } },
@@ -6251,16 +6268,34 @@ function showLock(){
   document.getElementById("lock").classList.remove("hide");
 }
 
+function playUnlockAudioOnce(){
+  if (window.__unlockAudioPlayed) return;
+  window.__unlockAudioPlayed = true;
+
+  const vo = document.getElementById("vo_reset");
+  const bell = document.getElementById("se_bell");
+
+  // どちらか無ければ安全に何もしない
+  if (!vo || !bell) return;
+
+  try{ vo.currentTime = 0; }catch(_){}
+  try{ bell.currentTime = 0; }catch(_){}
+
+  // 同時に1回だけ
+  try{ vo.play(); }catch(_){}
+  try{ bell.play(); }catch(_){}
+}
+
 async function apiPost(payload){
   if (!API_URL || API_URL.includes("PASTE_YOUR")) {
     throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
   }
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+await fetch(API_URL, {
+  method: "POST",
+  headers: { "Content-Type": "text/plain;charset=utf-8" },
+  body: JSON.stringify({ action:"redeem", passcode: pass }),
+  cache: "no-store",
+});
   if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
   return await res.json();
 }
@@ -6289,9 +6324,10 @@ async function unlock(){
     return;
   }
 
-  localStorage.setItem(LS_UNLOCKED, "1");
-  setMsg("解錠しました。", "ok");
-  showGame();
+localStorage.setItem(LS_UNLOCKED, "1");
+setMsg("解錠しました。", "ok");
+playUnlockAudioOnce();
+showGame();
 }
 
 document.getElementById("unlockBtn").addEventListener("click", unlock);
