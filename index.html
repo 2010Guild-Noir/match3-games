@@ -82,7 +82,7 @@
         <h1 class="title">あなたの専用パスキーを入力してください</h1>
         <p class="desc">
           <b>1端末につき1パスキー</b>です。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/>
-          この端末で一度解錠したら、以後は入力不要でプレイできます。
+         <br/> この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
         </p>
 
         <label for="passcode">パスキー</label>
@@ -6290,12 +6290,14 @@ async function apiPost(payload){
   if (!API_URL || API_URL.includes("PASTE_YOUR")) {
     throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
   }
-await fetch(API_URL, {
-  method: "POST",
-  headers: { "Content-Type": "text/plain;charset=utf-8" },
-  body: JSON.stringify({ action:"redeem", passcode: pass }),
-  cache: "no-store",
-});
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS preflight回避
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
   if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
   return await res.json();
 }
@@ -6317,7 +6319,7 @@ async function unlock(){
 
   if (!data || !data.ok){
     const err = (data && data.error) ? data.error : "UNKNOWN";
-    if (err === "NO_MATCH") setMsg("違います。パスキーを確認してください。", "err");
+    if (err === "NO_MATCH") setMsg("パスキーが異なります。パスキーを確認してください。", "err");
     else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
     else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
     else setMsg("エラー: " + err, "err");
