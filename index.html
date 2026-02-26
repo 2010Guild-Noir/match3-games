@@ -1,38 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="ja">
 <head>
-<!-- 明朝フォント読み込み -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>焦土の門</title>
+  <meta name="format-detection" content="telephone=no" />
+  <style>
+    :root{
+      --bg:#0b0b0d; --text:#eaeaf0; --muted:#b9b9c6; --danger:#ff6b6b; --ok:#7CFFB2;
+      --line:#2a2a33; --btn:#1f1f2a; --btn2:#2a2a3a;
+    }
+    html,body{height:100%;}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#000);color:var(--text);
+         font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .panel{width:min(720px,100%);background:rgba(20,20,24,.92);border:1px solid var(--line);
+           border-radius:18px;padding:22px 18px;box-shadow:0 10px 35px rgba(0,0,0,.55);}
+    .title{margin:0 0 10px;font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
+           letter-spacing:.06em;font-weight:700;font-size:22px;text-shadow:0 1px 0 rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.5);}
+    .desc{margin:0 0 14px;color:var(--muted);line-height:1.6;}
+    label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    input{flex:1;min-width:220px;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
+          background:#0e0e13;color:var(--text);font-size:16px;outline:none;}
+    input:focus{border-color:#5a5a74;box-shadow:0 0 0 3px rgba(90,90,116,.25);}
+    button{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--btn);color:var(--text);
+           font-size:15px;cursor:pointer;transition:transform .05s ease, background .15s ease;
+           font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;letter-spacing:.05em;}
+    button:hover{background:var(--btn2);} button:active{transform:translateY(1px);}
+    .smallbtn{padding:10px 12px;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+              letter-spacing:0;font-size:13px;}
+    .hr{height:1px;background:var(--line);margin:18px 0;}
+    .msg{margin-top:12px;line-height:1.6;} .msg.ok{color:var(--ok);} .msg.err{color:var(--danger);}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:13px;
+          word-break:break-all;background:#0e0e13;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;}
+    .note{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5;}
+    .foot{margin-top:14px;color:var(--muted);font-size:12px;}
+    .game{display:none;} .game.show{display:block;}
+    .lock{display:block;} .lock.hide{display:none;}
+  </style>
+</head>
 
-<style>
-  body {
-    font-family: "Noto Serif JP", "游明朝", "Yu Mincho", "ヒラギノ明朝 ProN", serif;
-    background: #0e0e11;
-    color: #f2f2f2;
-  }
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div id="lock" class="lock">
+        <h1 class="title">あなたの専用パスキーを入力してください</h1>
+        <p class="desc">
+          <b>1端末につき1パスキー</b>です。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/>
+          この端末で一度解錠したら、以後は入力不要でプレイできます（この端末に保存されます）。
+        </p>
 
-  h1, h2 {
-    letter-spacing: 0.05em;
-  }
+        <label for="passcode">パスキー</label>
+        <div class="row">
+          <input id="passcode" inputmode="latin" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+                 name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
+          <button id="unlockBtn">焦土の門を開く</button>
+        </div>
 
-  button {
-    font-family: inherit;
-    background: linear-gradient(135deg, #444, #111);
-    color: white;
-    border: 1px solid #888;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+        <div id="msg" class="msg"></div>
 
-  button:hover {
-    opacity: 0.85;
-  }
+        <div class="foot">
+          うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）
+        </div>
+      </div>
 
-  input {
-    font-family: inherit;
-    border: 1px solid #999;
-    border-radius: 4px;
-  }
-</style>
+      <div id="game" class="game">
+        <h1 class="title">門は開かれた</h1>
+        <p class="desc">この端末は解錠済みです。</p>
+
+        <!-- TODO: ここに既存のゲーム本体を配置 -->
+        <div class="mono"><!DOCTYPE html>
+<head>
+
 <script>
 /* iOS detection (single source of truth) */
 (function(){
@@ -530,6 +571,7 @@ html, body{
   text-shadow: 0 0 6px rgba(120,200,255,0.8);
 }
 #allmaxInput{
+  -webkit-text-security: disc;
   width: 100%;
   margin-top: 10px;
   padding: 10px 12px;
@@ -590,6 +632,7 @@ html, body{
   width:100%;
 }
 #allmaxInput{
+  -webkit-text-security: disc;
   width:min(72vw, 240px);
 }
 #allmaxOkBtn{
@@ -1063,33 +1106,7 @@ html.ios #indexModal .vol-toggle{
 
 </head>
 <body>
-  <!-- 🔒 ロック画面 -->
-<div id="lockScreen" style="text-align:center; margin-top:100px;">
-
-  <h2>🔐 パスキーを入力してください</h2>
-
-  <input
-    type="text"
-    id="keyInput"
-    placeholder="8桁のキー"
-    style="font-size:18px; padding:8px;"
-  >
-
-  <br><br>
-
-  <button
-    onclick="checkKey()"
-    style="font-size:18px; padding:8px 16px;"
-  >
-    焦土の門を開く
-  </button>
-
-  <p id="errorMsg" style="color:red;"></p>
-
-</div>
-<!-- 🎮 ゲーム本体 -->
-<div id="gameScreen" style="display:none;">
-
+  
 <script>
 /* Storage helper (polyfill) */
 window.store = window.store || {
@@ -2211,7 +2228,7 @@ const CHARACTERS = [
 
   { sym: "J_NEM", name: "合歓", tag: "悔恨", desc: "修羅王丸を恨む娘。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:1", image: "J_NEM", unlock: { key: "juso_spawn", value: true } },
   { sym: "J_SHI", name: "辰十郎", tag: "慙愧", desc: "筑前忍八剣衆の前元締。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:3", image: "J_SHI", unlock: { key: "juso_spawn", value: true } },
-  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む正義の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
+  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む絶対秩序の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
 
 ];
 let unlockedChars = store.get("unlockedChars", { initial: true, juso_spawn: false, SHURACHAN: false, REKUSHURA: false });
@@ -2498,7 +2515,7 @@ const MAX_RANK_INDEX = RANKS.length - 1;
 const NORMALS=["SANZU","MUTSU","HANZO","CHIEKO","KUJAKU"];
 const SPECIALS=RANKS.map(r=>r.key);
 const JUSOS=["J_NEM", "J_SHI", "J_PRO"];
-const RANK_THRESH =  [20, 100, 300, 500, 700];//ランクアップ闘値
+const RANK_THRESH = [5, 10, 10, 10, 10];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 10, "S_NE0": 20, "S_SHU": 30, "S_REQ": 40, "S_UNK": 50 };
 
 let board=[], yAnim=[], score=store.get("score",0), rankIndex=store.get("rankIndex",0), rankProgress=store.get("rankProgress",0);
@@ -5738,7 +5755,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 800; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 10; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -5911,7 +5928,7 @@ window.shuffleBoard = function(){
     <h2>― 到達せし者の扉 ―</h2>
     <div id="allmaxInputArea">
       <div id="allmaxInputRow">
-        <input id="allmaxInput" type="password" placeholder="「鍵を持つ者」に提示せよ" autocomplete="off" />
+        <input id="allmaxInput" type="text" placeholder="「鍵を持つ者」に提示せよ" autocomplete="off" />
         <button id="allmaxOkBtn" type="button">OK</button>
       </div>
       <div id="allmaxError">貴方は"未だ"その資格を得てはいないようだ…</div>
@@ -6167,6 +6184,8 @@ document.addEventListener('DOMContentLoaded', function(){
 }
 </style>
 
+
+
 <script>
 // === Ensure mobile range fill follows thumb (without changing existing logic) ===
 (function(){
@@ -6182,178 +6201,113 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
+
+</body>
+</html>
+
 </div>
 
-
+        <div class="hr"></div>
+        <div class="row">
+          <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
+        </div>
+        <div class="note">
+          ※解錠解除すると、この端末では再度パスキーが必要になります。<br/>
+          ただしパスキーは一度しか使えないため、解除後に再入力しても通りません。通常は押さないでください。
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
+/**
+ * Apps Script WebアプリURL（/exec）を貼る
+ */
+const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
 
-  /* ====== 購入者キー一覧 ====== */
-const VALID_KEYS = [
-"A7F9K2QX","M4Z8P3WJ","R2C9T6VN","X5B7H4KM","Q9D2L8FA","W6MZP7C4","T3R5N8KJ","FQ9A2M7H",
-"8C4XWZ5R","KJ6T3FQN","P7A9M2KC","4WZQX8R5","H6FJ3KNT","9C2PAMW7","R5X8ZK4Q","N3FJ6A7P",
-"QW4R5MZ2","T8C9KJXA","6P7H3NWF","M2QK4R9Z","X8F3T6C7","5WZP2AJM","K4R9H8QF","C7X2M6NP",
-"FJ5A9TQK","Z4P8H7WR","R6M3NXCQ","A2F9KJ5W","Q7Z8R4PN","M5H6TCXJ","P9W7F2Z4","KX6M3N8R",
-"4QJH9C5A","7ZP2TMWF","N8R4JQH6","F5K9XW2A","MZ3P8C7R","Q2H6NFW5","9A4XKJTM","C8W7RZP6",
-"J8FQ3M7A","4ZK9H2WR","P5N6XAJQ","C7R4M8TZ","WQF6P3KA","9MZ2XJ5R","H7A4KQCN","R8FJZP6M",
-"2C9W5XKA","M6R7A4FQ","X5N8QZPC","T4R2J7MW","A6C9FZQ5","K3P4H7XR","N2W5J6AM","Z9RFXKQ8",
-"5M7PCAW6","QXH8FJ4Z","4A2K5N9R","J6MW7CPZ","RZ5QF2N4","C8A6X7M3","W4H9PKJR","T6MZQ5F2",
-"N7XJ4A9C","KZ8QW5R6","9P2HMFAX","F7C3J4WQ","X6R8N2ZP","A5M9KQWC","2FJ7RZ6M","Q5C8A4XP",
-"M4WZJH6N","R3F9K7X2","H2P6M5QA","Z8A4NFWX","7KQ9C5JR","JXW6RZAM","N4P2H8F5","C5Q7ZAMR",
-"W8Q5J7A3","M4Z2NFX9","C6PRA8KQ","7H5XWJ2M","QF9A4Z6R","K2M7C5P8","N9WXR4AJ","A6Q5Z7MF",
-"R8H2KP9W","XJ4M6QNC","5Z7WPF4R","Q2K6M9AX","J8H5Z4NP","C9A7RXM2","M6FQW5P8","4N2ZJ7KX",
-"R5A9CH6Q","X7K8PZWM","QW6N4A5J","H2R9X7FC","A7K9M2QF","W4Z8XJ5P","C6R2H9MN","FQ8A5K7Z",
-"M2P9XW4R","J7C6H8QZ","N5F2A4KM","XQ7R9W6C","8K4J5FMA","P2Z7QH9R","M9Q7F2K8","W6H5A4XR",
-"C2PZJ7NQ","F8M4R9KA","XQ6P7H25","N3Z8WAKF","R4C9JQH2","K7F6PAX5","2W9ZQ4MN","H5R8C7KA",
-"Q9M4F7P2","A5C8RZWH","J6KX2N9F","P4H7QCMZ","W8F9R2KA","N6X7Z5MQ","2C4HPAK9","F8J6WR7M",
-"RZQ9K25C","M4A7H8FX","7W4ZQ6K2","N9A5J8F2","HCR7ZPM4","M5Q9F2AX","K4JZC8W7","R6HAPN5F",
-"QX9C7A24","P8M5H4ZJ","F6N2R9WQ","A7K4H5ZM","2Q8C5PNM","R7XW4Z9J","K6FAMQH2","9C7JZWR8",
-"P4H6NQF5","M2A9X7KR","5Z8QRCFN","H7P4JMA2","6N9WXFKQ","ARZ5M4HC","8P7C4H9K","Q5Z2N6WR",
-"JFM7A8XP","C6R5H4N9","2A9QW7KF","M4Z8XP6H","F5R7C2NJ","KQ6M4Z9W","HAPC7F58","N2XQJ4MR",
-"9H8ZCF7P","5AM6W4QK","RCN2KX98","J7Q9HMP4","FZ5W2A6K","N8P4Q7MC","6H2XR5ZJ","M4K9FCAP",
-"W7RZ8N25","QJ6M5HCF","A5H8FZ6N","4W2K7XQJ","R9CNP6AM","7Z5JH8FM","KQ2A4P6W","9NXR5C7M",
-"H6A4QJ2Z","F7KP8WMR","Z5N9M2C4","QX6J7HPA","P5Z9N7AX","C6A2HR4Q","WJ8KMZ75","F4H6Q9PC",
-"7XR2N5MA","N6JQ4Z8H","K5MFPAC9","2WZ7R4HQ","H8C9X6PA","QF5N7MZ4","J8W4K6HA","7P5Z2QCN",
-"M9XR6FJ4","C4A5H2NQ","8Z7FPMKW","R9H6A4CX","QJ2N7Z5F","5KMC8W6H","AX4R9H2P","F7Q5N6ZM",
-"H4P2QK8M","6N7A5RXF","C9JH4WZP","ZQ5R8X7A","M2K6F4H9","7CWP5QNR","AF6J8ZK2","N4HXQ5P9",
-"R8MZ7CA6","5QKJH4F2","X4Z6R7MA","P8H9N2KC","5QAJWZ6F","M4C7RHP8","6N5K2X9Q","AFZ7JH4R",
-"W8Q9C5MP","K2M7Z4NA","H9P6F5RX","CQ4WZ8J7","R5FQ7M8A","Z4N9CXPJ","K6W5HAFM","2A7PZQHR",
-"J9X6M5KF","N8C4RWP2","HQ6M7AFZ","5ZJQ8C9R","KXH7P42M","WF5AN8C6","4QH2M6FZ","C7R5WJ8P",
-"9KAFZXMN","H6P4QW7C","MZ5N2ARJ","8X9C6FHK","F7KQW5PA","C2R6MZJ4","Q9HNP5A7","W4XK8CFM",
-"N6Q9PZC7","H4W5XAF2","M7C8RZKQ","J5F4AN9P","Z8Q6W2XR","C7H5KP4M","F9N6A2JZ","WQX4R8CM",
-"P7M5K6AF","2H9ZCQRW","K8F7MZ2A","R6Q5P4XH","9A7CJNWM","M2H4ZQKP","F5R8C7XA","Q6NJP9K4",
-"C2W5AFHM","7Z9M6QXK","HP4F5C8N","AR6K7JZM","W9X2P5MZ","QH7A4CFK","6F8N5RCJ",
-"K2Z9A7MP","4HXM5WQF","C6RJP7A8","M9F5QZ24","7NCKAHXR","8W4J6PFQ","Z2Q5H9MC",
-"P6C8XAFN","5KMJ9R7Q","HW4Z2N8C","Q6A5P7XF","9JHCRK4M","2ZFW8N6P",
-"A5XQKMR4","C9P7ZJH6","M4H2F8WQ","R7K6A9XZ","N5WZC2K9","4M7JX6PA",
-"H8QF9C5R","Z7P4A2NM","6XQKAF9H","C2J5R8ZW","MP4W9KX7","5H6FNZQC",
-"8R7A2CXM","K9J4QHWF","Q7A9M5KX","H4ZP2F8C","N6WJ9QRA","5CXM7HFK",
-"Z8R4A2QP","KJ9F6W7M","2H5QXACZ","M7P4N8FR","W9C6KHA2"
-];// ←ここにパスキーを全部追加
-  ];
+const LS_UNLOCKED = "supporter_unlocked_v1";
 
-
-  /* ====== URLから key 取得 ====== */
-  const params = new URLSearchParams(window.location.search);
-  const userKey = params.get("key");
-
-
-  /* ====== URLキーが正しければ保存 ====== */
-  if (userKey && VALID_KEYS.includes(userKey)) {
-    localStorage.setItem("game_key", userKey);
-  }
-
-
-  /* ====== 保存済みキー取得 ====== */
-  const savedKey = localStorage.getItem("game_key");
-
-
-  /* ====== 認証チェック ====== */
-  function isAuthorized() {
-    return savedKey && VALID_KEYS.includes(savedKey);
-  }
-
-
-  /* ====== 入力チェック ====== */
-  function checkKey() {
-
-    const input = document
-      .getElementById("keyInput")
-      .value
-      .trim();
-
-    if (VALID_KEYS.includes(input)) {
-
-      // 保存
-      localStorage.setItem("game_key", input);
-
-      // 表示切替
-      showGame();
-
-    } else {
-
-      document.getElementById("errorMsg").textContent =
-        "❌ パスキーが違います";
-
-    }
-  }
-
-
-  /* ====== ゲーム表示 ====== */
-  function showGame() {
-
-    document.getElementById("lockScreen").style.display = "none";
-    document.getElementById("gameScreen").style.display = "block";
-
-  }
-
-
-  /* ====== 初期処理 ====== */
-  window.onload = function () {
-
-    if (isAuthorized()) {
-      showGame();
-    }
-
-  };
-
-</script>
-<script>
-const API_URL = "AKfycbypDWQ_wv8M4OzFcVAxXgdR0acc-bOEZJTFWw7BlBxK";
-
-async function checkKey(key){
-
-  const res = await fetch(API_URL);
-  const data = await res.json();
-
-  for(let i=1;i<data.length;i++){
-
-    const k = data[i][0];
-    const used = data[i][1];
-
-    if(k === key){
-
-      if(used == 0){
-        return true;
-      }else{
-        return "used";
-      }
-    }
-  }
-
-  return false;
+function normalizePasscode(s){
+  return (s || "")
+    .toString()
+    .normalize("NFKC")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
 }
 
-async function auth(){
+function setMsg(text, kind){
+  const el = document.getElementById("msg");
+  el.textContent = text || "";
+  el.className = "msg" + (kind ? " " + kind : "");
+}
 
-  let key = localStorage.getItem("game_key");
+function showGame(){
+  document.getElementById("lock").classList.add("hide");
+  document.getElementById("game").classList.add("show");
+}
 
-  if(!key){
-    key = prompt("パスキーを入力してください");
+function showLock(){
+  document.getElementById("game").classList.remove("show");
+  document.getElementById("lock").classList.remove("hide");
+}
+
+async function apiPost(payload){
+  if (!API_URL || API_URL.includes("PASTE_YOUR")) {
+    throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
   }
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
+  return await res.json();
+}
 
-  if(!key){
-    document.body.innerHTML="認証失敗";
+async function unlock(){
+  setMsg("", "");
+  const raw = document.getElementById("passcode").value || "";
+  const pass = normalizePasscode(raw);
+  if (!pass){ setMsg("パスキーを入力してください。", "err"); return; }
+
+  setMsg("照合中…", "");
+  let data;
+  try{
+    data = await apiPost({ action:"redeem", passcode: pass });
+  }catch(e){
+    setMsg(e.message || String(e), "err");
     return;
   }
 
-  const result = await checkKey(key);
-
-  if(result === true){
-    localStorage.setItem("game_key",key);
-    alert("認証OK！");
+  if (!data || !data.ok){
+    const err = (data && data.error) ? data.error : "UNKNOWN";
+    if (err === "NO_MATCH") setMsg("違います。パスキーを確認してください。", "err");
+    else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
+    else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
+    else setMsg("エラー: " + err, "err");
+    return;
   }
 
-  else if(result==="used"){
-    document.body.innerHTML="⚠️このキーは使用済みです";
-  }
-
-  else{
-    document.body.innerHTML="⚠️無効なキーです";
-  }
+  localStorage.setItem(LS_UNLOCKED, "1");
+  setMsg("解錠しました。", "ok");
+  showGame();
 }
 
-auth();
+document.getElementById("unlockBtn").addEventListener("click", unlock);
+document.getElementById("passcode").addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
+
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  localStorage.removeItem(LS_UNLOCKED);
+  document.getElementById("passcode").value = "";
+  setMsg("", "");
+  showLock();
+});
+
+(function boot(){
+  if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
+  else showLock();
+})();
 </script>
 </body>
 </html>
