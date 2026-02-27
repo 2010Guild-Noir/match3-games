@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
-  <title>修羅王丸 永遠の焦土パズル≪焦土の門≫</title>
+  <title>修羅王丸 永遠の焦土パズル</title>
   <meta name="format-detection" content="telephone=no" />
   <style>
     :root{
@@ -146,6 +146,13 @@
       <div id="game" class="game">
 
 <script>
+<!-- Favicons (keep paths explicit + cache-bust) -->
+<link rel="icon" href="./favicon.ico?v=1" sizes="any">
+<link rel="icon" href="./images/favicon.svg?v=1" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png?v=1">
+<link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png?v=1">
+<link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png?v=1">
+
 /* Storage helper (polyfill) */
 window.store = window.store || {
   get: function(k, def){ try{ var v = localStorage.getItem(k); return (v===null||v===undefined)?def:JSON.parse(v); }catch(e){ try{ var v2 = localStorage.getItem(k); return (v2===null||v2===undefined)?def:v2; }catch(e2){ return def; } } },
