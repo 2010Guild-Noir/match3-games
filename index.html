@@ -5289,5 +5289,190 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   else showLock();
 })();
 </script>
+
+<script id="unlock-system-fix">
+/* Unlock system fix: do NOT change any UI text; only ensure unlock flow runs reliably. */
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+
+  // Reuse existing API_URL if present; otherwise define a default.
+  if (typeof window.API_URL === "undefined") {
+    window.API_URL = 'https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec';
+  }
+
+  function normalizePasscode(s){
+    return (s || "")
+      .toString()
+      .normalize("NFKC")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  }
+
+  async function apiPost(payload){
+    const url = window.API_URL;
+    if (!url || typeof url !== "string") {
+      throw new Error("API_URLが未設定です。");
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
+    }
+    return await res.json();
+  }
+
+  // Safe message output (preserves whatever CSS is already used)
+  function setMsg(text, cls){
+    const el = $("msg");
+    if (!el) return;
+    el.textContent = text || "";
+    // keep base class "msg" if present
+    el.className = cls ? ("msg " + cls) : "msg";
+  }
+
+  // Minimal show/hide that matches existing CSS (.game.show / .lock.hide)
+  function showGame(){
+    const lock = $("lock");
+    const game = $("game");
+    if (lock) lock.classList.add("hide");
+    if (game) {
+      game.classList.add("show");
+      // Optional fade-in if class exists
+      game.classList.add("fade-in");
+      setTimeout(()=>{ try{ game.classList.remove("fade-in"); }catch(_){} }, 650);
+    }
+  }
+  function showLock(){
+    const lock = $("lock");
+    const game = $("game");
+    if (lock) lock.classList.remove("hide");
+    if (game) game.classList.remove("show");
+  }
+
+  // Respect existing storage key if defined elsewhere; otherwise fallback.
+  const KEY = (typeof window.LS_UNLOCKED !== "undefined") ? window.LS_UNLOCKED : "match3_unlocked";
+
+  function isUnlocked(){
+    try{ return localStorage.getItem(KEY) === "1"; }catch(_){ return false; }
+  }
+  function setUnlocked(){
+    try{ localStorage.setItem(KEY, "1"); }catch(_){}
+  }
+
+  function playGateTransitionOrShow(){
+    // If your page already defines a transition function, call it.
+    if (typeof window.startGateTransition === "function") {
+      try{ window.startGateTransition(); return; }catch(_){}
+    }
+    // If it defines its own showGame, prefer it.
+    if (typeof window.showGame === "function") {
+      try{ window.showGame(); return; }catch(_){}
+    }
+    // Fallback
+    showGame();
+  }
+
+  async function unlockFlow(){
+    const btn = $("unlockBtn");
+    const input = $("passcode");
+
+    if (!btn || !input) {
+      // If the UI is missing, do nothing (but avoid crashing).
+      setMsg("解錠画面の要素が見つかりません。", "err");
+      return;
+    }
+
+    // Always show activity
+    const prevText = btn.textContent;
+    btn.disabled = true;
+    try{ btn.classList.add("is-busy"); }catch(_ ){}
+    btn.textContent = "照合中…";
+    setMsg("", "");
+
+    try{
+      const pass = normalizePasscode(input.value || "");
+      if (!pass) {
+        setMsg("パスキーを入力してください。", "err");
+        return;
+      }
+
+      const data = await apiPost({ action:"redeem", passcode: pass });
+
+      if (!data || !data.ok) {
+        const err = (data && data.error) ? data.error : "UNKNOWN";
+        if (err === "NO_MATCH") setMsg("パスキーが異なります。パスキーを確認してください。", "err");
+        else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
+        else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
+        else setMsg("エラー: " + err, "err");
+        return;
+      }
+
+      // success
+      setUnlocked();
+      setMsg("解錠しました。", "ok");
+
+      // Optional sound hook if present
+      if (typeof window.playUnlockAudioOnce === "function") {
+        try{ window.playUnlockAudioOnce(); }catch(_){}
+      }
+
+      playGateTransitionOrShow();
+
+    } catch(e) {
+      setMsg((e && (e.message||String(e))) || "通信に失敗しました。", "err");
+    } finally {
+      btn.disabled = false;
+      try{ btn.classList.remove("is-busy"); }catch(_ ){}
+      btn.textContent = prevText;
+    }
+  }
+
+  function bind(){
+    const btn = $("unlockBtn");
+    const input = $("passcode");
+
+    if (btn) {
+      btn.addEventListener("click", function(ev){ ev.preventDefault(); unlockFlow(); });
+    }
+    if (input) {
+      input.addEventListener("keydown", function(ev){
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          if (btn) btn.click();
+        }
+      });
+    }
+
+    // initial view
+    if (isUnlocked()) {
+      // prefer existing showGame if present
+      if (typeof window.showGame === "function") {
+        try{ window.showGame(); return; }catch(_){}
+      }
+      showGame();
+    } else {
+      if (typeof window.showLock === "function") {
+        try{ window.showLock(); return; }catch(_){}
+      }
+      showLock();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+
+  // expose for manual testing
+  window.__unlockFlow = unlockFlow;
+})();
+</script>
+
 </body>
 </html>
