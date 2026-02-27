@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
-  <title>修羅王丸 永遠の焦土パズル≪焦土の門≫</title>
+  <title>修羅王丸 永遠の焦土パズル</title>
   <meta name="format-detection" content="telephone=no" />
 
   <!-- Unlock UI styles (scoped: do not affect game) -->
@@ -5249,7 +5249,7 @@ const ALLMAX_UNLOCK_KEY = "allmaxUnlocked";
 })();
 
 </script>
-<!-- >>> CHAR MODAL Z-INDEX & DOM FIX PATCH (added by ChatGPT) >>> -->
+<!-- >>> CHAR MODAL Z-INDEX & DOM FIX PATCH  >>> -->
 <style>
 /* Ensure modal overlays are fixed to viewport and stack correctly */
 .modal-overlay { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 10000; }
@@ -5258,6 +5258,7 @@ const ALLMAX_UNLOCK_KEY = "allmaxUnlocked";
 
 /* hide debug status */
 #status{ display:none !important; }
+
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -5282,7 +5283,38 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+.gate-button {
+  font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  padding: 14px 42px;
+  background: transparent;
+  color: #ddd;
+  border: 1px solid rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+}
 
+.gate-button:hover {
+  letter-spacing: 0.3em;
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 18px rgba(255,255,255,0.25);
+}
+
+.gate-button::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -8px;
+  height: 1px;
+  background: rgba(255,255,255,0.3);
+}
+
+.gate-button:hover {
+  box-shadow: 0 0 18px rgba(180,0,0,0.35);
+}
 </script>
 <script>
 /* ============================================================
@@ -6109,7 +6141,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <h1 class="unlock-title">あなたの専用パスキーを入力してください</h1>
       <p class="unlock-desc">
         <b>1端末につき1パスキー</b>です。<br/>
-        パスキーは使い切りのため、他の端末には使えなくなります。<br/><br/>
+        パスキーは使い切りのため、他の端末には使えなくなります。<br/>
         この端末で一度解錠したら、以後は入力不要でプレイできます。
       </p>
 
@@ -6118,7 +6150,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <input id="passcode" class="unlock-input" inputmode="latin" autocomplete="off"
                autocapitalize="characters" autocorrect="off" spellcheck="false"
                name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
-        <button id="unlockBtn" class="unlock-btn">焦土の門を開く</button>
+        <button id="unlockBtn" class="gate-button">焦土の門を開く</button>
       </div>
 
       <div id="msg" class="unlock-msg"></div>
