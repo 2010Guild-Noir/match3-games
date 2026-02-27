@@ -130,6 +130,14 @@
 }
 /* ===== end Unlock serif ===== */
 
+
+/* unlock button busy state (quiet) */
+#unlockBtn.is-busy{
+  opacity:.85;
+  filter:saturate(.9);
+}
+#unlockBtn:disabled{ cursor:not-allowed; opacity:.75; }
+
 </style>
 </head>
 
@@ -6360,10 +6368,18 @@ async function apiPost(payload){
 }
 
 async function unlock(){
-  setMsg("", "");
+  const __btn = document.getElementById("unlockBtn");
+  const __label0 = __btn ? __btn.textContent : "";
+  const __restore = ()=>{ if(__btn){ __btn.disabled=false; __btn.textContent=__label0; __btn.classList.remove("is-busy"); } };
+setMsg("", "");
+  const btn = document.getElementById("unlockBtn");
+  const btnLabel0 = btn ? btn.textContent : "";
+  if (btn){ btn.disabled = true; btn.textContent = "照合中…"; btn.classList.add("is-busy"); }
+
   const raw = document.getElementById("passcode").value || "";
   const pass = normalizePasscode(raw);
-  if (!pass){ setMsg("パスキーを入力してください。", "err"); return; }
+  if (!pass){ setMsg("パスキーを入力してください。", "err"); __restore(); return;
+}
 
   setMsg("照合中…", "");
   let data;
@@ -6371,8 +6387,8 @@ async function unlock(){
     data = await apiPost({ action:"redeem", passcode: pass });
   }catch(e){
     setMsg(e.message || String(e), "err");
-    return;
-  }
+    __restore(); return;
+}
 
   if (!data || !data.ok){
     const err = (data && data.error) ? data.error : "UNKNOWN";
@@ -6380,29 +6396,59 @@ async function unlock(){
     else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
     else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
     else setMsg("エラー: " + err, "err");
-    return;
-  }
+    __restore(); return;
+}
 
 localStorage.setItem(LS_UNLOCKED, "1");
 setMsg("解錠しました。", "ok");
 playUnlockAudioOnce();
+__restore();
 showGame();
 }
 
-document.getElementById("unlockBtn").addEventListener("click", unlock);
-document.getElementById("passcode").addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
+function $(id){ return document.getElementById(id); }
 
-document.getElementById("clearBtn").addEventListener("click", ()=>{
-  localStorage.removeItem(LS_UNLOCKED);
-  document.getElementById("passcode").value = "";
-  setMsg("", "");
-  showLock();
-});
+function bindUnlockUI(){
+  const btn = $("unlockBtn");
+  const input = $("passcode");
+  const clear = $("clearBtn");
 
-(function boot(){
+  if (btn){
+    btn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      unlock().catch(err=>{
+        // 最後の保険：想定外エラーも画面に出す
+        setMsg(String(err && (err.message||err)), "err");
+      });
+    });
+  }
+
+  if (input){
+    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); btn && btn.click(); } });
+  }
+
+  if (clear){
+    clear.addEventListener("click", (e)=>{
+      e.preventDefault();
+      localStorage.removeItem(LS_UNLOCKED);
+      if (input) input.value = "";
+      setMsg("", "");
+      showLock();
+    });
+  }
+
+  // 初期表示
   if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
   else showLock();
-})();
+}
+
+// DOMが組み上がってから確実にバインドする
+if (document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", bindUnlockUI);
+}else{
+  bindUnlockUI();
+}
+;
 </script>
 </body>
 </html>
