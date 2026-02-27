@@ -6,101 +6,162 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
   <title>修羅王丸 永遠の焦土パズル</title>
   <meta name="format-detection" content="telephone=no" />
+  <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap');
 
-  <!-- Unlock UI styles (scoped: do not affect game) -->
-  <style>
-    :root {
-      --u-bg:#0b0b0d; --u-text:#eaeaf0; --u-muted:#b9b9c6; --u-danger:#ff6b6b; --u-ok:#7CFFB2;
-      --u-line:#2a2a33; --u-btn:#1f1f2a; --u-btn2:#2a2a3a;
+    :root{
+      --bg:#0b0b0d; --text:#eaeaf0; --muted:#b9b9c6; --danger:#ff6b6b; --ok:#7CFFB2;
+      --line:#2a2a33; --btn:#1f1f2a; --btn2:#2a2a3a;
     }
     html,body{height:100%;}
-    body{margin:0;background:#000;color:var(--u-text);}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#000);color:var(--text);
+         font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .panel{width:min(720px,100%);background:rgba(20,20,24,.92);border:1px solid var(--line);
+           border-radius:18px;padding:22px 18px;box-shadow:0 10px 35px rgba(0,0,0,.55);}
+    .title{margin:0 0 10px;font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
+           letter-spacing:.06em;font-weight:700;font-size:22px;text-shadow:0 1px 0 rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.5);}
+    .desc{margin:0 0 14px;color:var(--muted);line-height:1.6;}
+    label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    input{flex:1;min-width:220px;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
+          background:#0e0e13;color:var(--text);font-size:16px;outline:none;}
+    input:focus{border-color:#5a5a74;box-shadow:0 0 0 3px rgba(90,90,116,.25);}
+    button{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--btn);color:var(--text);
+           font-size:15px;cursor:pointer;transition:transform .05s ease, background .15s ease;
+           font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;letter-spacing:.05em;}
+    button:hover{background:var(--btn2);} button:active{transform:translateY(1px);}
+    .smallbtn{padding:10px 12px;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+              letter-spacing:0;font-size:13px;}
+    .hr{height:1px;background:var(--line);margin:18px 0;}
+    .msg{margin-top:12px;line-height:1.6;} .msg.ok{color:var(--ok);} .msg.err{color:var(--danger);}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:13px;
+          word-break:break-all;background:#0e0e13;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;}
+    .note{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5;}
+    .foot{margin-top:14px;color:var(--muted);font-size:12px;}
+    .game{display:none;} .game.show{display:block;}
+    .lock{display:block;} .lock.hide{display:none;}
 
-    /* Fullscreen lock overlay */
-    #lockOverlay {
-      position:fixed; inset:0; z-index:9000;
-      display:flex; align-items:center; justify-content:center;
-      padding:24px;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(2px);
-    }
-    #lockOverlay.hide{display:none;}
+/* ====== PASSCODE SCREEN: Mincho (solemn) ====== */
+#lock,
+#lock .desc,
+#lock label,
+#lock input,
+#lock .foot,
+#lock .msg{
+  font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
+  letter-spacing:.04em;
+}
 
-    .unlock-panel{
-      width:min(720px,100%);
-      background:rgba(20,20,24,.92);
-      border:1px solid var(--u-line);
-      border-radius:18px;
-      padding:22px 18px;
-      box-shadow:0 10px 35px rgba(0,0,0,.55);
-    }
+#lock input::placeholder{
+  letter-spacing:.03em;
+}
 
-    .unlock-title{
-      margin:0 0 10px;
-      font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
-      letter-spacing:.06em;
-      font-weight:700;
-      font-size:22px;
-      text-shadow:0 1px 0 rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.5);
-    }
-    .unlock-desc{margin:0 0 14px;color:var(--u-muted);line-height:1.6;}
-    .unlock-label{display:block;margin:12px 0 6px;color:var(--u-muted);font-size:13px;}
-    .unlock-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    .unlock-input{
-      flex:1;min-width:220px;padding:12px 12px;border-radius:12px;border:1px solid var(--u-line);
-      background:#0e0e13;color:var(--u-text);font-size:16px;outline:none;
-    }
-    .unlock-input:focus{border-color:#5a5a74;box-shadow:0 0 0 3px rgba(90,90,116,.25);}
+/* ====== btn-reset (same as game reset button) ====== */
+.btn-reset{ 
+  background:linear-gradient(180deg,#6e2222,#421515); 
+  border-color:#a53939; 
+  color:#ffeded; 
+  /* ボタンのホバー時の発光を赤系に */
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(255, 100, 100, 0);
+}
+.btn-reset:hover, .btn-reset.hover-glow{ 
+  transform:translateY(-1px); 
+  border-color:#c84f4f; 
+  box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(255, 100, 100, 0.5); /* 赤系発光 */
+}
+.btn-reset:active{ 
+  transform:translateY(0); 
+  box-shadow:0 6px 14px rgba(0,0,0,.44) inset; 
+}
+  
+/* ===== Unlock UI (serif + quiet gate button) ===== */
+.unlock-panel,
+.unlock-title,
+.unlock-desc,
+.unlock-label,
+.unlock-foot{
+  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
+}
 
-    .unlock-btn{
-      padding:12px 14px;border-radius:12px;border:1px solid var(--u-line);
-      background:var(--u-btn);color:var(--u-text);font-size:15px;cursor:pointer;
-      transition:transform .05s ease, background .15s ease;
-      font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
-      letter-spacing:.05em;
-    }
-    .unlock-btn:hover{background:var(--u-btn2);}
-    .unlock-btn:active{transform:translateY(1px);}
+.unlock-title{
+  letter-spacing:.12em;
+  font-weight:700;
+}
 
-    .unlock-msg{margin-top:12px;line-height:1.6;}
-    .unlock-msg.ok{color:var(--u-ok);}
-    .unlock-msg.err{color:var(--u-danger);}
+.unlock-desc{
+  letter-spacing:.02em;
+}
 
-    .unlock-foot{margin-top:14px;color:var(--u-muted);font-size:12px;}
-    .unlock-mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-      font-size:13px; word-break:break-all; background:#0e0e13;
-      border:1px dashed var(--u-line); border-radius:12px; padding:2px 6px;
-    }
+.unlock-label{
+  letter-spacing:.10em;
+  font-weight:600;
+}
 
-    /* Gate transition overlay */
-    #gateOverlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.8s ease;
-      z-index: 9999;
-    }
-    #gateOverlay.open {
-      opacity: 1;
-      animation: gateFade 1.8s forwards;
-    }
-    @keyframes gateFade {
-      0% { opacity: 0; }
-      40% { opacity: 1; }
-      70% { opacity: 1; }
-      100% { opacity: 0; }
-    }
+.unlock-input{
+  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
+  letter-spacing:.08em;
+}
 
-    /* Game container visibility */
-    #gameRoot{display:none;}
-    #gameRoot.show{display:block;}
-  </style>
 
-  <!-- Game head assets (moved from embedded html; keep as-is except charset/title cleanup) -->
 
+@media (max-width: 520px){
+  
+}
+/* ===== end Unlock UI ===== */
+
+
+/* ===== Unlock serif typography only (no color override) ===== */
+.unlock-panel,
+.unlock-title,
+.unlock-desc,
+.unlock-label,
+.unlock-foot{
+  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
+}
+
+.unlock-title{
+  letter-spacing:.12em;
+  font-weight:700;
+}
+
+.unlock-input{
+  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
+  letter-spacing:.08em;
+}
+/* ===== end Unlock serif ===== */
+
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div id="lock" class="lock">
+        <p class="desc">
+          <b>「永遠の焦土パズル」へようこそ</b><br/><br/>1端末につき1パスキーです。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/> この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
+        </p>
+
+        <label for="passcode">パスキー</label>
+        <div class="row">
+          <input id="passcode" inputmode="latin" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+                 name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
+          <button id="unlockBtn" class="btn btn-reset gate-btn">焦土の門を開く</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+
+        <div class="foot">
+          うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）
+        </div>
+      </div>
+
+      <div id="game" class="game">
+        <h1 class="title">門は開かれた</h1>
+        <p class="desc">この端末は解錠済みです。</p>
+
+        <!-- TODO: ここに既存のゲーム本体を配置 -->
+        <div class="mono"><!DOCTYPE html>
+<head>
 
 <script>
 /* iOS detection (single source of truth) */
@@ -115,6 +176,14 @@
 </script>
 
 
+
+<script>
+/* iOS detection (global) */
+window.IS_IOS = IS_IOS;
+if (IS_IOS) { document.documentElement.classList.add('ios'); }
+</script>
+<meta charset="UTF-8" />
+<title>修羅王丸 永遠の焦土パズル(マッチ3)</title>
 
 <!-- Favicons (keep paths explicit + cache-bust) -->
 <link rel="icon" href="./favicon.ico?v=1" sizes="any">
@@ -1109,13 +1178,7 @@ html.ios #indexModal .vol-toggle{
 </style>
 
 </head>
-
-</head>
-
 <body>
-  <!-- GAME (no outer frame from unlock UI) -->
-  <div id="gameRoot">
-
   
 <script>
 /* Storage helper (polyfill) */
@@ -5249,7 +5312,7 @@ const ALLMAX_UNLOCK_KEY = "allmaxUnlocked";
 })();
 
 </script>
-<!-- >>> CHAR MODAL Z-INDEX & DOM FIX PATCH  >>> -->
+<!-- >>> CHAR MODAL Z-INDEX & DOM FIX PATCH (added by ChatGPT) >>> -->
 <style>
 /* Ensure modal overlays are fixed to viewport and stack correctly */
 .modal-overlay { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 10000; }
@@ -5258,7 +5321,6 @@ const ALLMAX_UNLOCK_KEY = "allmaxUnlocked";
 
 /* hide debug status */
 #status{ display:none !important; }
-
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -5283,38 +5345,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-.gate-button {
-  font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-  font-size: 18px;
-  letter-spacing: 0.2em;
-  padding: 14px 42px;
-  background: transparent;
-  color: #ddd;
-  border: 1px solid rgba(255,255,255,0.5);
-  cursor: pointer;
-  transition: all 0.4s ease;
-  position: relative;
-}
 
-.gate-button:hover {
-  letter-spacing: 0.3em;
-  background: rgba(255,255,255,0.05);
-  box-shadow: 0 0 18px rgba(255,255,255,0.25);
-}
-
-.gate-button::after {
-  content: "";
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  bottom: -8px;
-  height: 1px;
-  background: rgba(255,255,255,0.3);
-}
-
-.gate-button:hover {
-  box-shadow: 0 0 18px rgba(180,0,0,0.35);
-}
 </script>
 <script>
 /* ============================================================
@@ -6132,42 +6163,141 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+</body>
+</html>
+<script>
 
-  </div>
+// === FIX: reserve fixed area for skill text to prevent layout shift ===
+(function(){
+  function ensureSkillTextContainer(){
+    let c = document.getElementById('skillNameContainer');
+    if(!c){
+      c = document.createElement('div');
+      c.id = 'skillNameContainer';
+      const t = document.createElement('div');
+      t.id = 'skillNameText';
+      c.appendChild(t);
+      // append to body overlay layer
+      document.body.appendChild(c);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', ensureSkillTextContainer);
+})();
 
-  <!-- LOCK OVERLAY -->
-  <div id="lockOverlay">
-    <div class="unlock-panel">
-      <h1 class="unlock-title">あなたの専用パスキーを入力してください</h1>
-      <p class="unlock-desc">
-        <b>1端末につき1パスキー</b>です。<br/>
-        パスキーは使い切りのため、他の端末には使えなくなります。<br/>
-        この端末で一度解錠したら、以後は入力不要でプレイできます。
-      </p>
+</script>
 
-      <label class="unlock-label" for="passcode">パスキー</label>
-      <div class="unlock-row">
-        <input id="passcode" class="unlock-input" inputmode="latin" autocomplete="off"
-               autocapitalize="characters" autocorrect="off" spellcheck="false"
-               name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
-        <button id="unlockBtn" class="gate-button">焦土の門を開く</button>
-      </div>
+<style>
+/* === Mobile only slider styling (forced). PC untouched. ===
+   - Track base: neutral
+   - Fill only: water-blue
+   - Track thickness: 1.5x (6px)
+   - Fill follows thumb via CSS var (--fill-pct) updated in JS
+   - Thumb centered to track using track height var
+*/
+:root{ --range-thumb-nudge: 3px; }
 
-      <div id="msg" class="unlock-msg"></div>
+@media (max-width: 900px){
+  input[type="range"], .slider-hit input[type="range"]{
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    height: 28px !important;
+    background: transparent !important;
 
-      <div class="unlock-foot">
-        うまくいかない時：URL末尾に <span class="unlock-mono">?v=9</span> を付けてリロード（キャッシュ回避）
+    /* geometry vars */
+    --track-h: 8px;              /* 4px * 1.5 = 6px */
+    --fill-pct: 50%;
+    --thumb-s: 16px;
+    --thumb-nudge-mobile: 0px;   /* 必要ならここだけ微調整 */
+
+    /* fill (伸縮部分) */
+    background-image: linear-gradient(#5ecbff, #5ecbff) !important;
+    background-repeat: no-repeat !important;
+    background-position: left center !important;
+    background-size: var(--fill-pct) var(--track-h) !important;
+  }
+
+  /* Track base: neutral */
+  input[type="range"]::-webkit-slider-runnable-track,
+  .slider-hit input[type="range"]::-webkit-slider-runnable-track{
+    height: var(--track-h) !important;
+    background: rgba(255,255,255,0.22) !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+
+  /* Thumb: blue (centered) */
+  input[type="range"]::-webkit-slider-thumb,
+  .slider-hit input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none !important;
+    width: var(--thumb-s) !important;
+    height: var(--thumb-s) !important;
+    background: #1e90ff !important;
+    border: none !important;
+    border-radius: 50% !important;
+    margin-top: calc((var(--track-h) - var(--thumb-s)) / 2 + var(--thumb-nudge-mobile)) !important;
+  }
+
+  /* Firefox (Android) */
+  input[type="range"]::-moz-range-track,
+  .slider-hit input[type="range"]::-moz-range-track{
+    height: var(--track-h) !important;
+    background: rgba(255,255,255,0.22) !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+  input[type="range"]::-moz-range-thumb,
+  .slider-hit input[type="range"]::-moz-range-thumb{
+    width: var(--thumb-s) !important;
+    height: var(--thumb-s) !important;
+    background: #1e90ff !important;
+    border: none !important;
+    border-radius: 50% !important;
+    margin-top: calc((var(--track-h) - var(--thumb-s)) / 2 + var(--thumb-nudge-mobile)) !important;
+  }
+}
+</style>
+
+
+
+<script>
+// === Ensure mobile range fill follows thumb (without changing existing logic) ===
+(function(){
+  function bindFill(el){
+    if(!el) return;
+    try{ updateRangeFill(el); }catch(_){}
+    el.addEventListener('input', function(){ try{ updateRangeFill(el); }catch(_){} }, {passive:true});
+    el.addEventListener('change', function(){ try{ updateRangeFill(el); }catch(_){} }, {passive:true});
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    bindFill(document.getElementById('bgmSlider'));
+    bindFill(document.getElementById('seSlider'));
+  });
+})();
+</script>
+
+</body>
+</html>
+
+</div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
+        </div>
+        <div class="note">
+          ※解錠解除すると、この端末では再度パスキーが必要になります。<br/>
+          ただしパスキーは一度しか使えないため、解除後に再入力しても通りません。通常は押さないでください。
+        </div>
       </div>
     </div>
   </div>
 
 <script>
 /**
- * Apps Script WebアプリURL（/exec）
+ * Apps Script WebアプリURL（/exec）を貼る
  */
 const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
 
-/** Local device unlock flag */
 const LS_UNLOCKED = "supporter_unlocked_v1";
 
 function normalizePasscode(s){
@@ -6181,47 +6311,49 @@ function normalizePasscode(s){
 function setMsg(text, kind){
   const el = document.getElementById("msg");
   el.textContent = text || "";
-  el.className = "unlock-msg" + (kind ? " " + kind : "");
+  el.className = "msg" + (kind ? " " + kind : "");
 }
 
 function showGame(){
-  document.getElementById("lockOverlay").classList.add("hide");
-  document.getElementById("gameRoot").classList.add("show");
+  document.getElementById("lock").classList.add("hide");
+  document.getElementById("game").classList.add("show");
 }
 
 function showLock(){
-  document.getElementById("gameRoot").classList.remove("show");
-  document.getElementById("lockOverlay").classList.remove("hide");
+  document.getElementById("game").classList.remove("show");
+  document.getElementById("lock").classList.remove("hide");
+}
+
+function playUnlockAudioOnce(){
+  if (window.__unlockAudioPlayed) return;
+  window.__unlockAudioPlayed = true;
+
+  const vo = document.getElementById("vo_reset");
+  const bell = document.getElementById("se_bell");
+
+  // どちらか無ければ安全に何もしない
+  if (!vo || !bell) return;
+
+  try{ vo.currentTime = 0; }catch(_){}
+  try{ bell.currentTime = 0; }catch(_){}
+
+  // 同時に1回だけ
+  try{ vo.play(); }catch(_){}
+  try{ bell.play(); }catch(_){}
 }
 
 async function apiPost(payload){
-  if (!API_URL) throw new Error("API_URL が未設定です。");
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  if (!API_URL || API_URL.includes("PASTE_YOUR")) {
+    throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
+  }
+await fetch(API_URL, {
+  method: "POST",
+  headers: { "Content-Type": "text/plain;charset=utf-8" },
+  body: JSON.stringify({ action:"redeem", passcode: pass }),
+  cache: "no-store",
+});
   if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
   return await res.json();
-}
-
-function startGateTransition(onMid){
-  const overlay = document.createElement("div");
-  overlay.id = "gateOverlay";
-  document.body.appendChild(overlay);
-
-  setTimeout(() => overlay.classList.add("open"), 50);
-
-  // midway: switch screens at the darkest point
-  setTimeout(() => {
-    try { onMid && onMid(); } catch(_e) {}
-  }, 850);
-
-  // cleanup
-  setTimeout(() => {
-    try { overlay.remove(); } catch(_e) {}
-  }, 1850);
 }
 
 async function unlock(){
@@ -6248,29 +6380,21 @@ async function unlock(){
     return;
   }
 
-  localStorage.setItem(LS_UNLOCKED, "1");
-  setMsg("解錠しました。", "ok");
-
-  // Gate transition: darken -> show game -> fade out
-  startGateTransition(() => {
-    // If you have unlock audio, call it before/after as desired
-    if (typeof playUnlockAudioOnce === "function") {
-      try { playUnlockAudioOnce(); } catch(_e) {}
-    }
-    showGame();
-  });
+localStorage.setItem(LS_UNLOCKED, "1");
+setMsg("解錠しました。", "ok");
+playUnlockAudioOnce();
+showGame();
 }
 
 document.getElementById("unlockBtn").addEventListener("click", unlock);
 document.getElementById("passcode").addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
 
-// Debug-only: allow manual reset by devtools if needed
-window.__unlockDebugReset = function(){
+document.getElementById("clearBtn").addEventListener("click", ()=>{
   localStorage.removeItem(LS_UNLOCKED);
   document.getElementById("passcode").value = "";
   setMsg("", "");
   showLock();
-};
+});
 
 (function boot(){
   if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
