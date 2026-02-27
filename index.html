@@ -4,10 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
-  <title>修羅王丸 永遠の焦土パズル</title>
+  <title>修羅王丸 永遠の焦土パズル≪焦土の門≫</title>
   <meta name="format-detection" content="telephone=no" />
-  <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap');
-
+  <style>
     :root{
       --bg:#0b0b0d; --text:#eaeaf0; --muted:#b9b9c6; --danger:#ff6b6b; --ok:#7CFFB2;
       --line:#2a2a33; --btn:#1f1f2a; --btn2:#2a2a3a;
@@ -73,80 +72,15 @@
   transform:translateY(0); 
   box-shadow:0 6px 14px rgba(0,0,0,.44) inset; 
 }
-  
-/* ===== Unlock UI (serif + quiet gate button) ===== */
-.unlock-panel,
-.unlock-title,
-.unlock-desc,
-.unlock-label,
-.unlock-foot{
-  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
-}
-
-.unlock-title{
-  letter-spacing:.12em;
-  font-weight:700;
-}
-
-.unlock-desc{
-  letter-spacing:.02em;
-}
-
-.unlock-label{
-  letter-spacing:.10em;
-  font-weight:600;
-}
-
-.unlock-input{
-  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
-  letter-spacing:.08em;
-}
-
-
-
-@media (max-width: 520px){
-  
-}
-/* ===== end Unlock UI ===== */
-
-
-/* ===== Unlock serif typography only (no color override) ===== */
-.unlock-panel,
-.unlock-title,
-.unlock-desc,
-.unlock-label,
-.unlock-foot{
-  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
-}
-
-.unlock-title{
-  letter-spacing:.12em;
-  font-weight:700;
-}
-
-.unlock-input{
-  font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif;
-  letter-spacing:.08em;
-}
-/* ===== end Unlock serif ===== */
-
-
-/* unlock button busy state (quiet) */
-#unlockBtn.is-busy{
-  opacity:.85;
-  filter:saturate(.9);
-}
-#unlockBtn:disabled{ cursor:not-allowed; opacity:.75; }
-
-</style>
+  </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="panel">
+       <div class="panel">
       <div id="lock" class="lock">
         <p class="desc">
-          <b>「永遠の焦土パズル」へようこそ</b><br/><br/>1端末につき1パスキーです。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/> この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
+          <b>「永遠の焦土パズル」へようこそ</b><br/><br/>お客様専用パスキーを入力してください。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/> この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
         </p>
 
         <label for="passcode">パスキー</label>
@@ -159,11 +93,15 @@
         <div id="msg" class="msg"></div>
 
         <div class="foot">
-          うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）<br/> 解錠後はサイト履歴を削除しないようご注意ください。
+          うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）<br/> ※解錠後はブラウザの履歴削除をしないようご注意ください。<br/><br/>Ⓒ2010 Guild Noir. 修羅王丸®
         </div>
       </div>
 
       <div id="game" class="game">
+        <h1 class="title">門は開かれた</h1>
+        <p class="desc">この端末は解錠済みです。</p>
+
+        <!-- TODO: ここに既存のゲーム本体を配置 -->
         <div class="mono"><!DOCTYPE html>
 <head>
 
@@ -6350,32 +6288,23 @@ async function apiPost(payload){
   if (!API_URL || API_URL.includes("PASTE_YOUR")) {
     throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
   }
+
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS preflight回避
     body: JSON.stringify(payload),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
-  return await res.json();
-});
+
   if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
   return await res.json();
 }
 
 async function unlock(){
-  const __btn = document.getElementById("unlockBtn");
-  const __label0 = __btn ? __btn.textContent : "";
-  const __restore = ()=>{ if(__btn){ __btn.disabled=false; __btn.textContent=__label0; __btn.classList.remove("is-busy"); } };
-setMsg("", "");
-  const btn = document.getElementById("unlockBtn");
-  const btnLabel0 = btn ? btn.textContent : "";
-  if (btn){ btn.disabled = true; btn.textContent = "照合中…"; btn.classList.add("is-busy"); }
-
+  setMsg("", "");
   const raw = document.getElementById("passcode").value || "";
   const pass = normalizePasscode(raw);
-  if (!pass){ setMsg("パスキーを入力してください。", "err"); __restore(); return;
-}
+  if (!pass){ setMsg("パスキーを入力してください。", "err"); return; }
 
   setMsg("照合中…", "");
   let data;
@@ -6383,8 +6312,8 @@ setMsg("", "");
     data = await apiPost({ action:"redeem", passcode: pass });
   }catch(e){
     setMsg(e.message || String(e), "err");
-    __restore(); return;
-}
+    return;
+  }
 
   if (!data || !data.ok){
     const err = (data && data.error) ? data.error : "UNKNOWN";
@@ -6392,59 +6321,29 @@ setMsg("", "");
     else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
     else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
     else setMsg("エラー: " + err, "err");
-    __restore(); return;
-}
+    return;
+  }
 
 localStorage.setItem(LS_UNLOCKED, "1");
 setMsg("解錠しました。", "ok");
 playUnlockAudioOnce();
-__restore();
 showGame();
 }
 
-function $(id){ return document.getElementById(id); }
+document.getElementById("unlockBtn").addEventListener("click", unlock);
+document.getElementById("passcode").addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
 
-function bindUnlockUI(){
-  const btn = $("unlockBtn");
-  const input = $("passcode");
-  const clear = $("clearBtn");
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  localStorage.removeItem(LS_UNLOCKED);
+  document.getElementById("passcode").value = "";
+  setMsg("", "");
+  showLock();
+});
 
-  if (btn){
-    btn.addEventListener("click", (e)=>{
-      e.preventDefault();
-      unlock().catch(err=>{
-        // 最後の保険：想定外エラーも画面に出す
-        setMsg(String(err && (err.message||err)), "err");
-      });
-    });
-  }
-
-  if (input){
-    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); btn && btn.click(); } });
-  }
-
-  if (clear){
-    clear.addEventListener("click", (e)=>{
-      e.preventDefault();
-      localStorage.removeItem(LS_UNLOCKED);
-      if (input) input.value = "";
-      setMsg("", "");
-      showLock();
-    });
-  }
-
-  // 初期表示
+(function boot(){
   if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
   else showLock();
-}
-
-// DOMが組み上がってから確実にバインドする
-if (document.readyState === "loading"){
-  document.addEventListener("DOMContentLoaded", bindUnlockUI);
-}else{
-  bindUnlockUI();
-}
-;
+})();
 </script>
 </body>
 </html>
