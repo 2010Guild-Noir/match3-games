@@ -6176,6 +6176,38 @@ document.addEventListener('DOMContentLoaded', function(){
     document.documentElement.classList.add('supporter-unlocked');
     const ov = document.getElementById('supporterLockOverlay');
     if (ov) ov.style.display = 'none';
+    setDebugBtnVisible();
+  }
+
+  function setDebugBtnVisible(){
+    const b = document.getElementById('clearBtn');
+    if (!b) return;
+    let unlocked = false;
+    try{ unlocked = (localStorage.getItem(LS_UNLOCKED) === '1'); }catch(_){ unlocked = false; }
+    b.style.display = unlocked ? 'block' : 'none';
+  }
+
+  function showLockUI(){
+    // Return to passkey screen without reloading or touching game layout.
+    document.documentElement.classList.remove('supporter-unlocked');
+    document.documentElement.classList.remove('supporter-fading-in');
+
+    const ov = document.getElementById('supporterLockOverlay');
+    if (ov) ov.style.display = 'flex';
+
+    const fx = document.getElementById('unlockFxOverlay');
+    if (fx){
+      fx.classList.remove('play');
+      fx.style.opacity = '0';
+    }
+
+    const inp = document.getElementById('supporterPasscode');
+    if (inp){
+      inp.value = '';
+      try{ inp.focus(); }catch(_){ }
+    }
+
+    setDebugBtnVisible();
   }
 
   function runUnlockFx(){
@@ -6254,8 +6286,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function clearUnlock(){
     try{ localStorage.removeItem(LS_UNLOCKED); }catch(_){ }
     try{ localStorage.removeItem('supporter_unlocked_v1'); }catch(_){ }
-    // refresh to show lock again
-    location.reload();
+    showLockUI();
   }
 
   function boot(){
@@ -6286,6 +6317,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if (ov) ov.style.display = 'flex';
   }
 
+  setDebugBtnVisible();
+
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', boot);
   } else {
@@ -6297,33 +6330,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <!-- Debug: clear unlock (remove in release) -->
 <button class="smallbtn debug-clear" id="clearBtn" type="button">この端末の解錠を解除</button>
-<script>
-(function(){
-  var KEY = 'supporter_unlocked_v1';
-  function isUnlocked(){
-    try{ return localStorage.getItem(KEY)==='1'; }catch(e){ return false; }
-  }
-  function update(){
-    var b=document.getElementById('clearBtn');
-    if(!b) return;
-    // Show only when unlocked, so you can return to passkey screen for testing
-    b.style.display = isUnlocked() ? 'block' : 'none';
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    var b=document.getElementById('clearBtn');
-    if(!b) return;
-    update();
-    b.addEventListener('click', function(){
-      try{ localStorage.removeItem(KEY); }catch(e){}
-      document.documentElement.classList.remove('supporter-unlocked');
-      location.reload();
-    });
-  });
-  window.addEventListener('storage', update);
-  // if something unlocks after load, allow manual refresh
-  setTimeout(update, 0);
-})();
-</script>
 <style>
   /* Debug button should not affect game layout */
   #clearBtn.debug-clear{
