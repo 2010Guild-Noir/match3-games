@@ -8,8 +8,8 @@
     /* Prevent a brief flash of the passcode screen on already-unlocked devices */
     html{ visibility:hidden; }
     html.ready{ visibility:visible; }
-    html.pre-unlocked #lock{ display:none !important; }
-    html.pre-unlocked #game{ display:block !important; }
+    html.pre-unlocked #lock{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+    html.pre-unlocked #game{ opacity:1 !important; visibility:visible !important; pointer-events:auto !important; }
   </style>
   <script>
   (function(){
@@ -56,8 +56,16 @@
           word-break:break-all;background:#0e0e13;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;}
     .note{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5;}
     .foot{margin-top:14px;color:var(--muted);font-size:12px;}
-    .game{display:none;} .game.show{display:block;}
-    .lock{display:block;} .lock.hide{display:none;}
+    .game{opacity:0; visibility:hidden; pointer-events:none; transition:opacity .45s ease;}
+    .game.show{opacity:1; visibility:visible; pointer-events:auto;}
+    .lock{opacity:1; visibility:visible; pointer-events:auto; transition:opacity .25s ease;}
+    .lock.hide{opacity:0; visibility:hidden; pointer-events:none;}
+
+    /* ====== UNLOCK LOGIN FX ====== */
+    #unlockFx{position:fixed; inset:0; background:#fff; opacity:0; clip-path:circle(0% at 50% 50%); pointer-events:none; z-index:9999; transition:opacity .4s ease;}
+    #unlockFx.run{opacity:1; animation:unlockFlash .55s ease-out forwards;}
+    #unlockFx.fade{opacity:0;}
+    @keyframes unlockFlash{from{clip-path:circle(0% at 50% 50%);}to{clip-path:circle(150% at 50% 50%);}}
 
 /* ====== PASSCODE SCREEN: Mincho (solemn) ====== */
 #lock,
@@ -6170,6 +6178,7 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+  <div id="unlockFx" aria-hidden="true"></div>
 </body>
 </html>
 <script>
@@ -6282,6 +6291,7 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+  <div id="unlockFx" aria-hidden="true"></div>
 </body>
 </html>
 
@@ -6329,6 +6339,40 @@ function showGame(){
 function showLock(){
   document.getElementById("game").classList.remove("show");
   document.getElementById("lock").classList.remove("hide");
+}
+
+
+function runUnlockFxThenShowGame(){
+  // 白い光→ホワイトアウト→ゲーム画面フェードイン
+  if (window.__unlockFxRunning) return;
+  window.__unlockFxRunning = true;
+
+  const fx = document.getElementById("unlockFx");
+  if (!fx){
+    showGame();
+    window.__unlockFxRunning = false;
+    return;
+  }
+
+  // reset
+  fx.classList.remove("run","fade");
+  // start
+  fx.classList.add("run");
+
+  // whiteout完了直後にゲーム表示→フェードイン
+  window.setTimeout(()=>{
+    showGame();
+    // overlayをフェードアウトしてゲームを見せる
+    requestAnimationFrame(()=>fx.classList.add("fade"));
+  }, 560);
+
+  // cleanup
+  window.setTimeout(()=>{
+    fx.classList.remove("run","fade");
+    // clip-path reset (Safari対策)
+    fx.style.clipPath = "circle(0% at 50% 50%)";
+    window.__unlockFxRunning = false;
+  }, 1200);
 }
 
 function playUnlockAudioOnce(){
@@ -6392,7 +6436,7 @@ async function unlock(){
 localStorage.setItem(LS_UNLOCKED, "1");
 setMsg("解錠しました。", "ok");
 playUnlockAudioOnce();
-showGame();
+runUnlockFxThenShowGame();
 }
 
 document.getElementById("unlockBtn").addEventListener("click", unlock);
@@ -6410,5 +6454,6 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   else showLock();
 })();
 </script>
+  <div id="unlockFx" aria-hidden="true"></div>
 </body>
 </html>
