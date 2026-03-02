@@ -19,15 +19,21 @@
 
 
     /* ===== Game reveal fade-in (no layout changes; opacity only) ===== */
-    html.game-fade body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+    /* Step 1: prep state forces opacity to 0 instantly (NO transition) */
+    html.game-prep body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
       opacity:0 !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+      transition:none !important;
+    }
+    /* Step 2: fade state transitions opacity 0 -> 1 linearly over ~2s */
+    html.game-fade body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+      opacity:1 !important;
       visibility:visible !important;
       pointer-events:auto !important;
       transition: opacity 2s linear !important;
     }
-    html.game-fade.game-fade-in body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
-      opacity:1 !important;
-    }
+
 
     /* ===== Passkey overlay ===== */
     #lock{
@@ -125,21 +131,18 @@
     #burstOverlay.play{ opacity:1; }
     #burstOverlay::before{
       content:"";
-      position:absolute; inset:-20%;
-      background: radial-gradient(circle at center,
-        rgba(255,255,255,0.0) 0%,
-        rgba(255,255,255,0.0) 18%,
-        rgba(255,255,255,0.35) 28%,
-        rgba(255,255,255,0.85) 44%,
-        rgba(255,255,255,1.0) 58%,
-        rgba(255,255,255,1.0) 100%);
-      transform: scale(0.15);
-      filter: blur(2px);
-      opacity:0;
-      animation: burstWhite 1.05s ease-out forwards;
+      position:absolute; inset:0;
+      background:#fff;
+      transform:scale(0);
+      transform-origin:50% 50%;
+      opacity:1;
+      animation: burstWhite .55s ease-out forwards;
     }
     @keyframes burstWhite{
-      0%   { transform:scale(0.15); opacity:0; filter:blur(2px); }
+      from{ transform:scale(0); }
+      to  { transform:scale(1); }
+    }
+
       10%  { opacity:0.65; }
       55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
       100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
@@ -1261,17 +1264,28 @@ html.ios #indexModal .vol-toggle{
   }
 
   function startGameFadeIn(){
-    // Reveal the game with a linear 2s fade (fog-clearing feel). No layout/geometry changes.
+    // Reveal the game with a truly linear ~2s fade-in (no end "pop").
+    // We MUST avoid adding a class that has a transition while the game is still at opacity:1.
     const root = document.documentElement;
-    root.classList.add("game-fade");
+
+    // Step 1: force game opacity to 0 instantly (no transition)
+    root.classList.add("game-prep");
+
+    // Show the game content (game system unchanged; only visibility/opacity layering)
     showGame();
+
+    // Step 2: in the next frame, switch to the transitioning state (0 -> 1 linear)
     requestAnimationFrame(()=>{
-      root.classList.add("game-fade-in");
+      root.classList.remove("game-prep");
+      root.classList.add("game-fade");
     });
+
+    // Cleanup after transition completes
     window.setTimeout(()=>{
-      root.classList.remove("game-fade","game-fade-in");
-    }, 2100);
+      root.classList.remove("game-prep","game-fade");
+    }, 2300);
   }
+
 
   function showLock(){
     document.documentElement.classList.add("locked");
@@ -1312,11 +1326,11 @@ html.ios #indexModal .vol-toggle{
       fx.classList.add("run");
     }
 
-    // hold full white a bit longer, then fade game in while the overlay fades out
+    // hold full white a bit longer (+0.5s), then fade game in while the overlay fades out
     window.setTimeout(()=>{
       startGameFadeIn();
       if (fx) requestAnimationFrame(()=>fx.classList.add("fade"));
-    }, 1060);
+    }, 1560);
 
     // cleanup overlays
     window.setTimeout(()=>{
@@ -1326,7 +1340,7 @@ html.ios #indexModal .vol-toggle{
       }
       if (burst) burst.classList.remove("play");
       window.__unlockFxRunning = false;
-    }, 3400);
+    }, 4100);
   }
 
   async function apiPost(payload){
