@@ -4,6 +4,25 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <style>
+    /* Prevent a brief flash of the passcode screen on already-unlocked devices */
+    html{ visibility:hidden; }
+    html.ready{ visibility:visible; }
+    html.pre-unlocked #lock{ display:none !important; }
+    html.pre-unlocked #game{ display:block !important; }
+  </style>
+  <script>
+  (function(){
+    try{
+      var k = "supporter_unlocked_v1"; // must match LS_UNLOCKED
+      if (localStorage.getItem(k) === "1") {
+        document.documentElement.classList.add("pre-unlocked");
+      }
+    }catch(e){}
+    // Reveal after we applied the initial state.
+    document.documentElement.classList.add("ready");
+  })();
+  </script>
   <title>修羅王丸 永遠の焦土パズル</title>
   <meta name="format-detection" content="telephone=no" />
   <style>
@@ -151,6 +170,1023 @@
 
       <div id="game" class="game">
 
+<script>
+/* iOS detection (single source of truth) */
+(function(){
+  if (typeof window.IS_IOS === 'undefined'){
+    window.IS_IOS = (/iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1));
+  }
+  // legacy alias safety
+  window.isIOS = window.IS_IOS;
+  if (window.IS_IOS) { document.documentElement.classList.add('ios'); }
+})();
+</script>
+
+
+
+<script>
+/* iOS detection (global) */
+window.IS_IOS = IS_IOS;
+if (IS_IOS) { document.documentElement.classList.add('ios'); }
+</script>
+<meta charset="UTF-8" />
+<title>修羅王丸 永遠の焦土パズル(マッチ3)</title>
+
+<!-- Favicons (keep paths explicit + cache-bust) -->
+<link rel="icon" href="./favicon.ico?v=1" sizes="any">
+<link rel="icon" href="./images/favicon.svg?v=1" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png?v=1">
+<link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png?v=1">
+<link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png?v=1">
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+html{ margin:0; padding:0; height:100%; }
+
+.modal-overlay[hidden]{display:none !important;}
+
+  :root{ --bg-0:#070707; --ink:#f5f7fb; --muted:#a3a7b3; --line:#2b2e34; }
+  body{ margin:0; color:var(--ink); font-family:"Noto Sans JP",system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background: radial-gradient(1400px 680px at 50% -10%, #1b1c20 0%, #0c0c0e 55%, var(--bg-0) 100%),
+               linear-gradient(180deg, #0b0b0c 0%, #09090a 100%); min-height:100dvh; text-align:center; }
+  .wrap{ max-width:640px; margin:0 auto 28px; padding:0 16px 16px; }
+  .panel{ margin:0 auto; padding:16px 14px; border-radius:16px; background:#121316; border:1px solid var(--line);
+    box-shadow:0 18px 60px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.06) inset; backdrop-filter:saturate(120%) blur(8px); }
+  /* タイトルサイズ＝B */
+  h1{ display:none; }
+  .subtitle{ display:none; }
+  .hud{ display:flex; gap:10px; justify-content:space-between; align-items:center; margin:0; padding:8px 10px 6px; flex-wrap:wrap; }
+  .badge{ background:linear-gradient(180deg,#1c1d22,#14151a); border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-weight:700; }
+  .rank-progress{ font-size:12px; font-weight:400; margin-left:8px; opacity:0.8; }
+canvas{ display:block; margin:18px auto; width:min(96vw, 480px); height:auto; aspect-ratio:1/1; box-sizing:border-box; background:#111; border-radius:14px; border:1px solid var(--line);
+   box-shadow:0 16px 40px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.05) inset; touch-action:none; }
+
+  /* === Mobile-only fit: keep board within screen (no desktop impact) === */
+  @media (max-width: 520px){
+    .wrap{ padding-left:8px; padding-right:8px; }
+    .panel{ padding-left:12px; padding-right:12px; }
+    canvas{ width:100%; max-width:100%; }
+  }
+
+ .panel{ overflow:hidden; } /* はみ出しを左右均等にクリップ */
+  .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0 12px; }
+  .btn{ display:inline-flex; align-items:center; gap:.4em; font-weight:600; font-size:14px;
+    background:linear-gradient(180deg,#202126,#14151a); color:#fff; border:1px solid var(--line);
+    border-radius:999px; padding:8px 12px; cursor:pointer; user-select:none;
+    /* ★発光効果 */
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(127, 183, 255, 0);
+    transition:transform .08s ease, box-shadow .18s ease, border-color .2s ease, background .2s ease; }
+  /* ★発光効果 (Hover) */
+  .btn:hover, .btn.hover-glow{ 
+    transform:translateY(-1px); border-color:#3c4048; 
+    box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(127, 183, 255, 0.5); /* ホバー時の発光 */
+  }
+  .btn:active{ transform:translateY(0); box-shadow:0 6px 14px rgba(0,0,0,.44) inset; }
+  .btn-kanki{ background:linear-gradient(180deg,#233246,#17212c); border-color:#2b3b4f; }
+  .btn-shodo{ background:linear-gradient(180deg,#3a1b1e,#1d0e10); border-color:#4b2a2f; }
+  /* ★発光効果 (Active) */
+  .btn.active{ outline:2px solid #7fb7ff; box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 15px rgba(127, 183, 255, 0.8); }
+  .btn-shuffle{ background:linear-gradient(180deg,#44224a,#2c1430); border-color:#5c3563; }
+  .btn-mini{ padding:4px 8px; font-size:12px; }
+  .status{ margin:6px 0 10px; font-size:12.5px; color:var(--muted); }
+
+  #titleRow{
+    margin:2px 4px 0;
+    font-size:11px;
+    color:var(--muted);
+    text-align:left;
+  }
+/* コンボ技名ラベル */
+  #comboTextRow{
+  width:90%;
+  max-width:260px;
+  margin:2px auto 0;
+  text-align:center;
+
+  /* ★ここが重要：テキストの有無やフォントサイズ変更でもレイアウトが動かない */
+  height:17px;
+  line-height:17px;
+  min-height:17px;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* コンボ技名ラベルのフォント／縁取り（源真ゴシック Heavy想定） */
+  #comboTextLabel{
+    display:inline-block;
+    max-width:100%;
+    font-family: "源真ゴシック Heavy","Yu Gothic","Meiryo",system-ui,sans-serif;
+    font-size:17px;          /* 少し小さめにして「地之叢雲」まで収める */
+    font-weight:900;
+    color:#111111;           /* 黒に近い文字色 */
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #comboGaugeLabel{
+    margin:2px 4px 0;
+    font-size:10px;
+    color:var(--muted);
+    text-align:left;
+  }
+  #comboGaugeTicks{
+    width:90%;
+    max-width:260px;
+    margin:2px auto 0;
+    font-size:9px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    pointer-events:none;
+  }
+
+  #comboGauge{
+    width:90%;
+    max-width:260px;
+    height:4px;
+    margin:4px auto 0;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    overflow:hidden;
+  }
+  #comboGaugeFill{
+    width:0%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#ff6b6b,#ffa94d);
+    transition:width .12s ease-out;
+  }
+
+
+  /* 新規：リセットボタンの色 */
+  .btn-reset{ 
+    background:linear-gradient(180deg,#6e2222,#421515); 
+    border-color:#a53939; color:#ffeded; 
+    /* リセットボタンのホバー時の発光を赤系に */
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(255, 100, 100, 0);
+  }
+  .btn-reset:hover, .btn-reset.hover-glow{ 
+    transform:translateY(-1px); border-color:#c84f4f; 
+    box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(255, 100, 100, 0.5); /* 赤系発光 */
+  }
+  .btn-reset:active{ transform:translateY(0); box-shadow:0 6px 14px rgba(0,0,0,.44) inset; }
+
+
+  /* 操作方法＝ */
+  details.help{ text-align:left; background:linear-gradient(180deg,#14151a,#111217); border:1px solid var(--line);
+                border-radius:14px; padding:12px 14px; margin:14px 0; box-shadow:0 12px 32px rgba(0,0,0,.35) inset; }
+  details.help summary{ cursor:pointer; font-weight:700; }
+  details.help ul{ margin:8px 0 0 18px; } details.help li{ margin:4px 0; line-height:1.6; }
+  small.note{ opacity:.75; display:block; margin-top:6px; }
+
+  /* モーダル共通スタイル（図鑑用をベースに調整） */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-overlay.open { display: flex; }
+  /* ★インデックスの上に重ねて表示するため、図鑑と操作説明のZ-indexを上げる */
+  /* Z-index: 10010 (indexModal) < 10012 (charModal, howtoModal) */
+  /* ★修正: .openクラスがなくてもz-indexを適用し、インデックスモーダルより前面に表示されるようにする */
+  #charModal { z-index: 20000; } 
+  #howtoModal { z-index: 20000; }
+  
+  .modal-content { background:#191b1f; padding:25px; border-radius:12px; max-width:90%; max-height:80%; overflow-y:auto; position:relative; color:var(--ink); text-align:left; border:1px solid var(--line); box-shadow:0 12px 30px rgba(0,0,0,0.6); }
+  
+  /* クローズボタンのスタイルを統一 */
+  .close-btn { 
+    position:absolute; top:10px; right:15px; z-index:1000; 
+    display:inline-block; width:36px; height:36px;
+    background:transparent url("images/closebutton.png") center/contain no-repeat;
+    border:none;padding:0;margin:0;box-shadow:none;border-radius:0;
+    color:transparent;text-indent:-9999px;overflow:hidden;cursor:pointer;
+  }
+  .close-btn:hover{filter:brightness(1.1);}
+
+  /* 図鑑固有 */
+  .char-modal-content { /* 図鑑のコンテンツは少し広め */
+    max-width: 90%;
+    max-height: 80%;
+    width: min(92vw, 720px); 
+    padding: 25px;
+  }
+  .char-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:15px;margin-top:20px; }
+  .char-item { border:1px solid #333; padding:10px; border-radius:8px; background:#222; opacity:0.5; transition:opacity .3s; }
+  .char-item.unlocked{ opacity:1; }
+  .char-item h4 { margin:0 0 5px 0; font-size:16px; }
+  .char-item p { margin:0; font:12px; color:var(--muted); }
+  .char-item img { width:40px; height:40px; margin-right:10px; border-radius:4px; vertical-align:middle; }
+  .char-item .title-row { display:flex; align-items:center; }
+
+/* === 図鑑：ロック中は完全ブラインド表示 === */
+.char-item.locked{ 
+  opacity:1;
+  background:#1b1b1b;
+}
+.char-item.locked .title-row img,
+.char-item.locked .char-tag,
+.char-item.locked p,
+.char-item.locked small{
+  display:none !important;
+}
+.char-item.locked .title-row::before{
+  content:"";
+  display:inline-block;
+  width:40px; height:40px;
+  margin-right:10px;
+  border-radius:4px;
+  background:#0e0e0e;
+  border:1px solid #333;
+}
+
+  /* 図鑑のタグ */
+  .char-tag{ display:inline-block; font-size:10px; padding:3px 6px; border-radius:4px; font-weight:700; border:1px solid #444; margin-left:6px; }
+  .char-tag.yellow{ background:#4d4200; border-color:#6b5e00; color:#ffd900; } /* 式神=黄色 */
+  .char-tag.blue  { background:#0c2a4a; border-color:#174a7a; color:#7fc8ff; }/* 修羅王丸=青 */
+  .char-tag.red   { background:#3a0c12; border-color:#5a1c22; color:#ff8a8a; }/* お邪魔=赤 */
+  .char-tag.neutral{ background:#333; color:#ccc; }
+  .char-tag.orange{ background:#4a2a00; border-color:#6a3a00; color:#ffb25f; }/* しゅらちゃん=橙 */
+
+  /* 最終ランク時：特殊選択行のアイコンボタン */
+  #rankSelectRow .btn-icon{
+    display:inline-flex; align-items:center; gap:4px; padding:2px 4px; border-radius:10px;
+    font-size:12px; line-height:0; border:1px solid var(--line); background:linear-gradient(180deg,#222,#16171b);
+    cursor:pointer; user-select:none;
+    /* ★発光効果 */
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(127, 183, 255, 0);
+    transition:transform .08s ease, box-shadow .18s ease, border-color .2s ease, background .2s ease;
+  }
+
+  #rankSelectRow .btn-icon:hover{ transform:translateY(-1px); border-color:#3c4048; box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(127, 183, 255, 0.5); }
+  #rankSelectRow .btn-icon.active{ outline:2px solid #7fb7ff; box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 15px rgba(127, 183, 255, 0.8); }
+
+#rankSelectRow { 
+  gap: 14px;
+}
+  #rankSelectRow .btn-icon img{ width:40px; height:40px; border-radius:3px; display:block; }
+  
+.panel{ overflow: hidden; }
+.panel > .row + .row { margin-top: 10px; }
+.panel > .row:not(#rankSelectRow) {
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+details.help summary,
+details.help ul,
+details.help li {
+  text-align: left;
+}
+
+/* === インデックスボタン＋モーダル  === */
+/* 右上に固定するボタン（インデックス） */
+#indexBtn{
+  position:fixed;top:10px;right:10px;width:40px;height:40px;
+  display:inline-grid;place-items:center;border-radius:10px;border:1px solid var(--line);
+  /* アイコンは適宜変更してください。ここではデフォルトのhowtoアイコンを流用 */
+  background:rgba(20,20,20,.9) url("images/howtobutton.png") center/28px 28px no-repeat;
+  color:transparent;cursor:pointer;z-index:10005; border-color:#33CFFF;
+  /* ★発光効果 */
+  box-shadow:0 0 0 rgba(127, 183, 255, 0);
+  transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+#indexBtn:hover{
+  border-color:#7fb7ff;
+  box-shadow:0 0 8px rgba(127, 183, 255, 0.6);
+}
+
+#indexModal[hidden]{display:none;}
+#indexModal{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.8);z-index:10010;}
+#indexModal .index-panel{
+  background:#111;color:var(--ink);border:1px solid var(--line);border-radius:14px;
+  width:min(92vw,360px);max-height:90vh;box-shadow:0 10px 28px rgba(0,0,0,.6);
+  position:relative;padding:25px;text-align:center;
+}
+#indexModal .index-panel h2{margin:0 0 20px; font-size:24px;}
+/* インデックス内のボタンリスト */
+#indexModal .btn-list{display:grid; gap:12px;}
+#indexModal .btn-list .btn{ 
+  width:100%; justify-content:center; 
+  padding:12px 16px; /* ボタンを大きく */
+  font-size:16px; 
+}
+/* BGM/SEボタンは小さく左右に並べる */
+#indexModal .btn-group{display:flex; gap:10px;}
+#indexModal .volume-group{
+  flex-direction:column;
+  align-items:stretch;
+}
+.volume-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+}
+.volume-text{
+  font-size:14px;
+  min-width:70px;
+  text-align:left;
+}
+.volume-row input[type="range"]{
+  flex:1;
+  touch-action: none;           /* iOS/Chromeでドラッグをスクロール扱いにしない */
+  -webkit-tap-highlight-color: transparent;
+}
+#indexModal .btn-group .btn{ flex:1; padding:10px 12px; font-size:15px; }
+
+/* 覚醒リセットボタンのスタイルとマージン */
+#indexModal #resetRankBtn{ 
+  margin-top: 30px; /* 他のボタンと間隔を空ける */
+  padding:12px 16px; 
+  font-size:16px; 
+}
+
+
+/* === 操作説明モーダル (howtoModal) === */
+#howtoModal[hidden]{display:none;} /* 追加 */
+#howtoModal .modal-content { 
+  width:min(92vw,720px); max-height:90vh; padding:14px 14px 10px; /* 図鑑より薄く */
+}
+#howtoModal .howto-img-wrap{position:relative;display:grid;place-items:center;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;}
+#howtoModal img#howtoImg{width:100%;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none;}
+#howtoModal .howto-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:9999px;border:1px solid var(--line);background:rgba(28,28,28,.9);color:var(--ink);cursor:pointer;z-index:10;}
+#howtoModal .howto-nav.prev{left:8px;}
+#howtoModal .howto-nav.next{right:8px;}
+#howtoModal .howto-caption{margin-top:8px;text-align:center;font-size:13px;opacity:.9;}
+
+
+/* === ランク確認モーダル (新規) === */
+#resetConfirmModal[hidden]{display:none;}
+#resetConfirmModal{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.9);z-index:10015;}
+#resetConfirmModal .modal-content {
+  max-width: 320px;
+  padding: 30px 20px 20px;
+  text-align: center;
+  background:#201111; /* 赤黒系の背景 */
+  border-color:#4d2020;
+}
+#resetConfirmModal h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #ffc0c0;
+}
+#resetConfirmModal .confirm-btns {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+#resetConfirmModal .confirm-btns .btn {
+  width: 45%;
+  font-size: 15px;
+}
+/* はいボタンは赤系 */
+#resetConfirmModal #confirmResetYes {
+    background: linear-gradient(180deg,#6e2222,#421515);
+    border-color: #a53939;
+    color: #ffeded;
+}
+
+/* hide debug status */
+#status{ display:none !important; }
+
+
+/* ★BGM/SE トグル：他ボタンと親和する小型ピル（スライダーが長くてもON/OFFしやすく） */
+.vol-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.35em;
+  font-weight:600;
+  font-size:13px;
+
+  min-width:70px; /* 既存のラベル幅を維持 */
+  height:28px;
+  padding:0 10px;
+
+  background:linear-gradient(180deg,#202126,#14151a);
+  color:#fff;
+  border:1px solid var(--line);
+  border-radius:999px;
+
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 18px rgba(0,0,0,.35);
+  transition:transform .08s ease, box-shadow .18s ease, border-color .2s ease, background .2s ease;
+}
+.vol-toggle:hover{
+  transform:translateY(-1px);
+  border-color:#3c4048;
+  box-shadow:0 14px 24px rgba(0,0,0,.44), 0 0 10px rgba(127, 183, 255, 0.35);
+}
+.vol-toggle:active{
+  transform:translateY(0);
+  box-shadow:0 6px 14px rgba(0,0,0,.44) inset;
+}
+.vol-toggle:focus{ outline:none; }
+
+/* ミュート状態の視認性（アイコン自体はJS側で🔈/🔊切替） */
+.vol-toggle.is-muted{
+  opacity:.78;
+  background:linear-gradient(180deg,#1a1b20,#101116);
+  border-color:#2b2e37;
+}
+
+
+/* ★外枠の上下隙間ゼロ＋黒背景を確実に全面表示 */
+html, body{
+  height:100%;
+  min-height:100dvh;
+  margin:0;
+  padding:0;
+  background:#000;
+  /* 画像背景を使う場合は下の行をONにしてください */
+}
+.wrap{
+  margin-top:0 !important;
+  padding-top:0 !important;
+  margin-bottom:0 !important;
+  padding-bottom:0 !important;
+  min-height:100dvh;
+}
+.panel{
+  margin-bottom:0 !important;
+  padding-bottom:0 !important;
+}
+
+
+/* === ALL MAX UNLOCK UI === */
+#allmaxOverlay{
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(0,0,0,0.92) 70%);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#allmaxPanel{
+  position: relative;
+  padding: 28px 26px 30px;
+  width: min(90vw, 360px);
+  background: linear-gradient(180deg, rgba(20,20,25,0.95), rgba(10,10,12,0.98));
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(120,200,255,0.25), 0 0 30px rgba(120,200,255,0.25);
+  text-align: center;
+  color: #eaf6ff;
+}
+#allmaxPanel h2{
+  margin: 0 0 14px;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  color: #bfe9ff;
+  text-shadow: 0 0 6px rgba(120,200,255,0.8);
+}
+#allmaxInput{
+  -webkit-text-security: disc;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(120,200,255,0.4);
+  background: rgba(0,0,0,0.6);
+  color: #eaf6ff;
+  outline: none;
+}
+#allmaxInput::placeholder{ color: rgba(200,230,255,0.4); }
+#allmaxError{
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ffb0b0;
+  display: none;
+}
+#allmaxImage{
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 40px rgba(120,200,255,0.35);
+  display: none;
+}
+#allmaxClose{
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 18px;
+  color: #bfe9ff;
+  cursor: pointer;
+  opacity: 0.8;
+  user-select: none;
+}
+#allmaxClose:hover{ opacity: 1; }
+
+#titleLabel.allmax-ready{
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(120,200,255,0.9), 0 0 14px rgba(120,200,255,0.35);
+}
+#titleLabel.allmax-ready:hover{
+  filter: brightness(1.08);
+}
+
+/* === ALL MAX (input row centered + image strictly contained) === */
+#allmaxInputArea{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+#allmaxInputRow{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  width:100%;
+}
+#allmaxInput{
+  -webkit-text-security: disc;
+  width:min(72vw, 240px);
+}
+#allmaxOkBtn{
+  padding:10px 14px;
+  font-size:15px;
+  border-radius:8px;
+  border:1px solid rgba(120,200,255,0.4);
+  background:rgba(0,0,0,0.6);
+  color:#eaf6ff;
+  cursor:pointer;
+}
+#allmaxOkBtn:hover{ filter:brightness(1.08); }
+#allmaxImage{
+  display:none;
+  width:100% !important;
+  max-width:100% !important;
+  height:auto !important;
+  object-fit:contain !important;
+}
+#allmaxOverlay.allmax-unlocked #allmaxImage{ display:block !important; }
+
+
+
+/* === Mobile/iPhone: range slider hit target enlargement === */
+.slider-hit{ display:flex; align-items:center; width:100%; }
+@media (max-width: 900px){
+  .slider-hit{
+    padding: 14px 6px;           /* expands touch target vertically & slightly horizontally */
+    margin: -10px -6px;          /* keep layout unchanged while enlarging hit area */
+    touch-action: none;
+  }
+  .slider-hit input[type="range"]{
+    height: 32px;                /* bigger control box helps iOS hit testing */
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+  .slider-hit input[type="range"]::-webkit-slider-runnable-track{
+    height: 10px;
+  }
+  .slider-hit input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -8px;            /* centers thumb on 10px track */
+  }
+  .slider-hit input[type="range"]::-moz-range-track{ height: 10px; }
+  .slider-hit input[type="range"]::-moz-range-thumb{ width: 26px; height: 26px; }
+}
+
+
+/* === FIX: skill-name text should not push the board === */
+#skillNameContainer, .skill-name-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;              /* 固定高さ：レイアウトシフト防止 */
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#skillNameText, .skill-name-text {
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* === FIX: make range sliders visible on mobile (track/thumb were transparent) === */
+input[type="range"]::-webkit-slider-runnable-track{
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  background: rgba(245,247,251,0.92);
+  border: 1px solid rgba(0,0,0,0.35);
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-track{
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-thumb{
+  background: rgba(245,247,251,0.92);
+  border: 1px solid rgba(0,0,0,0.35);
+  border-radius: 999px;
+}
+
+
+/* === FIX: mobile range sliders visibility (track/thumb) === */
+@media (max-width: 900px){
+  .slider-hit input[type="range"]::-webkit-slider-runnable-track{
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+  }
+  .slider-hit input[type="range"]::-webkit-slider-thumb{
+    background: rgba(245,247,251,0.92);
+    border: 1px solid rgba(0,0,0,0.35);
+    border-radius: 999px;
+  }
+  .slider-hit input[type="range"]::-moz-range-track{
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+  }
+  .slider-hit input[type="range"]::-moz-range-thumb{
+    background: rgba(245,247,251,0.92);
+    border: 1px solid rgba(0,0,0,0.35);
+    border-radius: 999px;
+  }
+}
+
+
+/* === FIX: restore desktop slider look (no top/bottom borders) === */
+@media (min-width: 901px){
+  input[type="range"]::-webkit-slider-runnable-track{ border: none !important; }
+  input[type="range"]::-webkit-slider-thumb{ border: none !important; }
+  input[type="range"]::-moz-range-track{ border: none !important; }
+  input[type="range"]::-moz-range-thumb{ border: none !important; }
+}
+
+
+/* === FIX: range fill bar (track fill) === */
+input[type="range"]{
+  background-image: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
+  background-repeat: no-repeat;
+  background-size: 50% 100%; /* JSで更新 */
+}
+@media (max-width: 900px){
+  .slider-hit input[type="range"]{
+    background-image: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
+    background-repeat: no-repeat;
+    background-size: 50% 100%;
+  }
+}
+
+input[type="range"]{
+  flex:1;
+  touch-action: none;           /* iOS/Chromeでドラッグをスクロール扱いにしない */
+  -webkit-tap-highlight-color: transparent;
+}
+input[type="range"]{
+    height: 32px;                /* bigger control box helps iOS hit testing */
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+input[type="range"]::-webkit-slider-runnable-track{
+    height: 10px;
+  }
+input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -8px;            /* centers thumb on 10px track */
+  }
+input[type="range"]::-moz-range-track{ height: 10px; }
+input[type="range"]::-moz-range-thumb{ width: 26px; height: 26px; }
+input[type="range"]::-webkit-slider-runnable-track{
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  background: rgba(245,247,251,0.92);
+  border: 1px solid rgba(0,0,0,0.35);
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-track{
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-thumb{
+  background: rgba(245,247,251,0.92);
+  border: 1px solid rgba(0,0,0,0.35);
+  border-radius: 999px;
+}
+input[type="range"]::-webkit-slider-runnable-track{
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+  }
+input[type="range"]::-webkit-slider-thumb{
+    background: rgba(245,247,251,0.92);
+    border: 1px solid rgba(0,0,0,0.35);
+    border-radius: 999px;
+  }
+input[type="range"]::-moz-range-track{
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+  }
+input[type="range"]::-moz-range-thumb{
+    background: rgba(245,247,251,0.92);
+    border: 1px solid rgba(0,0,0,0.35);
+    border-radius: 999px;
+  }
+input[type="range"]::-webkit-slider-runnable-track{ border: none !important; }
+input[type="range"]::-webkit-slider-thumb{ border: none !important; }
+input[type="range"]::-moz-range-track{ border: none !important; }
+input[type="range"]::-moz-range-thumb{ border: none !important; }
+input[type="range"]{
+  background-image: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
+  background-repeat: no-repeat;
+  background-size: 50% 100%; /* JSで更新 */
+}
+input[type="range"]{
+    background-image: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
+    background-repeat: no-repeat;
+    background-size: 50% 100%;
+  }
+/* === Mobile slider uses PC style === */
+@media (max-width: 900px){
+  .slider-hit input[type="range"]{
+    all: unset;
+  }
+  .slider-hit input[type="range"]{
+    flex: 1;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+
+/* === FINAL RESET: restore native range slider appearance (match original PC) === */
+input[type="range"]{
+  all: revert;
+  appearance: auto;
+  -webkit-appearance: auto;
+  background: initial;
+}
+
+
+/* === FIX: thumb vertical centering with small per-engine nudge ===
+   Native range metrics differ across OS/engines; a 1px nudge is the most stable way
+   to achieve optical centering without redesigning the slider. */
+:root{
+  --range-track-h: 4px;
+  --range-thumb-h: 16px;
+  --range-thumb-nudge: 1px; /* +down. Set 0px if already centered */
+}
+/* WebKit / Blink */
+input[type="range"]::-webkit-slider-thumb{
+  margin-top: calc((var(--range-track-h) - var(--range-thumb-h)) / 2 + var(--range-thumb-nudge));
+}
+/* Firefox */
+input[type="range"]::-moz-range-thumb{
+  margin-top: calc((var(--range-track-h) - var(--range-thumb-h)) / 2 + var(--range-thumb-nudge));
+}
+
+
+/* === iOS: keep native range interaction reliable === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 900px){
+    .slider-hit{ touch-action: pan-y; }
+    input[type="range"]{ touch-action: pan-y; }
+  }
+}
+
+</style>
+<style>
+/* === BGM selection glow colors === */
+.btn.bgm1-active{ outline:2px solid rgba(120,200,150,.85); box-shadow:0 0 15px rgba(120,200,150,.7); }
+.btn.bgm2-active{ outline:2px solid rgba(240,120,120,.85); box-shadow:0 0 15px rgba(240,120,120,.7); }
+/* FX canvas safety */
+#fxCanvas{ background:transparent!important; pointer-events:none; z-index:1!important; display:none; }
+
+/* hide debug status */
+#status{ display:none !important; }
+</style>
+
+<!-- howto responsive fit override -->
+<style id="howto-fit-override">
+#howtoModal .modal-content{
+  width: min(94vw, 640px);
+  max-height: 92vh;
+  overflow: hidden;
+}
+#howtoModal .howto-img-wrap{
+  width: 100%;
+  height: auto;
+  max-height: 85vh;
+  aspect-ratio: auto;
+  display: grid;
+  place-items: center;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+#howtoModal .howto-img-wrap img,
+#howtoModal img#howtoImg{
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  display: block;
+}
+</style>
+
+<!-- howto nav shift override: move prev/next half outside so they don't cover the image -->
+<style id="howto-nav-shift-override">
+/* 画像外側にボタンをずらすため、ラッパーのはみ出しを許可 */
+#howtoModal .howto-img-wrap{
+  overflow: visible !important;
+  position: relative;
+}
+
+/* よくあるセレクタ群にまとめて適用（どれかにマッチすれば動く） */
+#howtoModal .howto-prev, 
+#howtoModal .howto-next,
+#howtoModal .howto-nav .prev, 
+#howtoModal .howto-nav .next,
+#howtoModal #howtoPrev, 
+#howtoModal #howtoNext,
+#howtoModal .btn-prev,
+#howtoModal .btn-next{
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 5;
+}
+
+/* 左ボタン：自分の直径ぶん外へ（= 追加で半分外側に） */
+#howtoModal .howto-prev,
+#howtoModal .howto-nav .prev,
+#howtoModal #howtoPrev,
+#howtoModal .btn-prev{
+  left: 0 !important;
+  transform: translate(calc(-27.5% - 8px), -50%) !important; 
+}
+
+/* 右ボタン：自分の直径ぶん外へ */
+#howtoModal .howto-next,
+#howtoModal .howto-nav .next,
+#howtoModal #howtoNext,
+#howtoModal .btn-next{
+  right: 0 !important;
+  transform: translate(calc(27.5% + 8px), -50%) !important;
+}
+</style>
+<!-- howto arrow color override -->
+<style id="howto-arrow-color-override">
+/* 1) テキストやアイコンフォントで作られた矢印を赤に */
+#howtoModal .howto-prev,
+#howtoModal .howto-next,
+#howtoModal .howto-nav .prev,
+#howtoModal .howto-nav .next,
+#howtoModal #howtoPrev,
+#howtoModal #howtoNext,
+#howtoModal .btn-prev,
+#howtoModal .btn-next{
+  color: #ff3b3b !important;  /* 鮮やかな赤 */
+}
+
+/* 2) 疑似要素で矢印を出している場合（::before など） */
+#howtoModal .howto-prev::before,
+#howtoModal .howto-next::before,
+#howtoModal .howto-nav .prev::before,
+#howtoModal .howto-nav .next::before,
+#howtoModal #howtoPrev::before,
+#howtoModal #howtoNext::before,
+#howtoModal .btn-prev::before,
+#howtoModal .btn-next::before{
+  color: #ff3b3b !important;
+}
+
+/* 3) SVGアイコンを使っている場合 */
+#howtoModal .howto-prev svg,
+#howtoModal .howto-next svg,
+#howtoModal .howto-nav .prev svg,
+#howtoModal .howto-nav .next svg,
+#howtoModal #howtoPrev svg,
+#howtoModal #howtoNext svg,
+#howtoModal .btn-prev svg,
+#howtoModal .btn-next svg{
+  fill: #ff3b3b !important;
+  stroke: #ff3b3b !important; /* アウトライン型でも赤に */
+}
+</style>
+
+
+<style>
+/* iOS: hide volume sliders (BGM/SE) */
+html.ios input[type="range"],
+html.ios .volume-slider,
+html.ios .slider,
+html.ios .slider-wrap,
+html.ios .volume-control {
+  display: none !important;
+}
+</style>
+
+
+<style>
+/* iOS: make BGM/SE toggles centered and easier to tap (visual design preserved) */
+html.ios #indexModal .volume-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 14px;
+}
+html.ios #indexModal .vol-toggle{
+  font-size: 18px;
+  padding: 14px 18px;
+  min-width: 140px;
+  border-radius: 14px;
+}
+</style>
+
+
+<style>
+/* iOS: use readable Gothic font stack */
+html.ios, html.ios body, html.ios button, html.ios input, html.ios select, html.ios textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP", sans-serif !important;
+}
+</style>
+
+
+<style>
+/* Passcode panel title: Mincho */
+#allmaxPanel h2{
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", "Noto Serif JP", serif !important;
+  letter-spacing: 0.04em;
+}
+</style>
+
+
+<style>
+/* Toggle button visual state */
+.vol-toggle{
+  border: 2px solid rgba(255,255,255,0.22);
+  transition: box-shadow 140ms ease, border-color 140ms ease, filter 140ms ease;
+}
+.vol-toggle.is-on{
+  border-color: #4169E1 !important;
+  box-shadow: 0 0 6px rgba(255,255,255,0.55), 0 0 10px rgba(65,105,225,0.75), 0 0 18px rgba(65,105,225,0.35);
+}
+</style>
+
+
+<style>
+/* Prevent label wrapping/clipping on audio toggle buttons */
+#bgmBtnIndex, #seBtnIndex{
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+  overflow: visible !important;
+}
+</style>
+
+
+<style>
+/* Ensure toggle button box fits emoji/text */
+html.ios #indexModal .vol-toggle{
+  min-height: 52px;
+}
+</style>
+
+</head>
+<body>
+  
 <script>
 /* Storage helper (polyfill) */
 window.store = window.store || {
@@ -1559,7 +2595,7 @@ const MAX_RANK_INDEX = RANKS.length - 1;
 const NORMALS=["SANZU","MUTSU","HANZO","CHIEKO","KUJAKU"];
 const SPECIALS=RANKS.map(r=>r.key);
 const JUSOS=["J_NEM", "J_SHI", "J_PRO"];
-const RANK_THRESH = [5, 10, 10, 10, 10];//ランクアップ闘値
+const RANK_THRESH = [20, 100, 300, 500, 700];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 10, "S_NE0": 20, "S_SHU": 30, "S_REQ": 40, "S_UNK": 50 };
 
 let board=[], yAnim=[], score=store.get("score",0), rankIndex=store.get("rankIndex",0), rankProgress=store.get("rankProgress",0);
@@ -1692,7 +2728,7 @@ function spawnChainAfterglowEmbers(chainCount, anchor){
   if (chainCount >= 4){
     const maxSheets = 12;
     if (chainAfterglowSheets.length > maxSheets) chainAfterglowSheets.splice(0, chainAfterglowSheets.length - maxSheets);
-    const lifeS = (chainCount === 4) ? 120 : ((chainCount >= 6) ? 80 : (chainCount === 5 ? 70 : 60)); // 連鎖4はフェードを半分
+    const lifeS = (chainCount === 4) ? 240 : ((chainCount >= 6) ? 80 : (chainCount === 5 ? 70 : 60));
     chainAfterglowSheets.push({
       life: lifeS, maxLife: lifeS,
       chain: chainCount
@@ -3338,10 +4374,9 @@ function drawChainAfterglowEmbers(){
       s.life -= 1;
       const tS = 1 - (s.life / s.maxLife); // 0→1
       const yCeil = logicalSize * 0.00; // 上昇最上値：盤面100%（上端まで）
-      const riseSpan = (s.chain === 4) ? 0.275 : 0.55; // 連鎖4は上昇スピード2倍
-      const pRise = Math.min(1, tS / riseSpan); // 上昇は寿命前半で完了させる
+      const pRise = Math.min(1, tS / 0.55); // 上昇は寿命前半で完了させる
       const y0 = logicalSize - (pRise * (logicalSize - yCeil));
-      const h  = logicalSize * ((s.chain === 4) ? 1.10 : 0.55); // 連鎖4は縦幅2倍
+      const h  = logicalSize * 0.55;
 
       // 白飛び防止：連鎖4は控えめ、5で中、6+で強め（ただし上限あり）
       const aMax = (s.chain >= 6) ? 0.26 : (s.chain === 5 ? 0.44 : 0.18); // 連鎖5の白い光筋は透明度を倍に
@@ -4800,7 +5835,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 10; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 800; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -5134,7 +6169,135 @@ document.addEventListener('DOMContentLoaded', function(){
   evs.forEach(e=>{ try{ window.addEventListener(e, once, true); }catch(_){ } });
 })();
 </script>
+
+</body>
+</html>
+<script>
+
+// === FIX: reserve fixed area for skill text to prevent layout shift ===
+(function(){
+  function ensureSkillTextContainer(){
+    let c = document.getElementById('skillNameContainer');
+    if(!c){
+      c = document.createElement('div');
+      c.id = 'skillNameContainer';
+      const t = document.createElement('div');
+      t.id = 'skillNameText';
+      c.appendChild(t);
+      // append to body overlay layer
+      document.body.appendChild(c);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', ensureSkillTextContainer);
+})();
+
+</script>
+
+<style>
+/* === Mobile only slider styling (forced). PC untouched. ===
+   - Track base: neutral
+   - Fill only: water-blue
+   - Track thickness: 1.5x (6px)
+   - Fill follows thumb via CSS var (--fill-pct) updated in JS
+   - Thumb centered to track using track height var
+*/
+:root{ --range-thumb-nudge: 3px; }
+
+@media (max-width: 900px){
+  input[type="range"], .slider-hit input[type="range"]{
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    height: 28px !important;
+    background: transparent !important;
+
+    /* geometry vars */
+    --track-h: 8px;              /* 4px * 1.5 = 6px */
+    --fill-pct: 50%;
+    --thumb-s: 16px;
+    --thumb-nudge-mobile: 0px;   /* 必要ならここだけ微調整 */
+
+    /* fill (伸縮部分) */
+    background-image: linear-gradient(#5ecbff, #5ecbff) !important;
+    background-repeat: no-repeat !important;
+    background-position: left center !important;
+    background-size: var(--fill-pct) var(--track-h) !important;
+  }
+
+  /* Track base: neutral */
+  input[type="range"]::-webkit-slider-runnable-track,
+  .slider-hit input[type="range"]::-webkit-slider-runnable-track{
+    height: var(--track-h) !important;
+    background: rgba(255,255,255,0.22) !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+
+  /* Thumb: blue (centered) */
+  input[type="range"]::-webkit-slider-thumb,
+  .slider-hit input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none !important;
+    width: var(--thumb-s) !important;
+    height: var(--thumb-s) !important;
+    background: #1e90ff !important;
+    border: none !important;
+    border-radius: 50% !important;
+    margin-top: calc((var(--track-h) - var(--thumb-s)) / 2 + var(--thumb-nudge-mobile)) !important;
+  }
+
+  /* Firefox (Android) */
+  input[type="range"]::-moz-range-track,
+  .slider-hit input[type="range"]::-moz-range-track{
+    height: var(--track-h) !important;
+    background: rgba(255,255,255,0.22) !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+  input[type="range"]::-moz-range-thumb,
+  .slider-hit input[type="range"]::-moz-range-thumb{
+    width: var(--thumb-s) !important;
+    height: var(--thumb-s) !important;
+    background: #1e90ff !important;
+    border: none !important;
+    border-radius: 50% !important;
+    margin-top: calc((var(--track-h) - var(--thumb-s)) / 2 + var(--thumb-nudge-mobile)) !important;
+  }
+}
+</style>
+
+
+
+<script>
+// === Ensure mobile range fill follows thumb (without changing existing logic) ===
+(function(){
+  function bindFill(el){
+    if(!el) return;
+    try{ updateRangeFill(el); }catch(_){}
+    el.addEventListener('input', function(){ try{ updateRangeFill(el); }catch(_){} }, {passive:true});
+    el.addEventListener('change', function(){ try{ updateRangeFill(el); }catch(_){} }, {passive:true});
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    bindFill(document.getElementById('bgmSlider'));
+    bindFill(document.getElementById('seSlider'));
+  });
+})();
+</script>
+
+</body>
+</html>
+
 </div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
+        </div>
+        <div class="note">
+          ※解錠解除すると、この端末では再度パスキーが必要になります。<br/>
+          ただしパスキーは一度しか使えないため、解除後に再入力しても通りません。通常は押さないでください。
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 /**
@@ -5159,52 +6322,11 @@ function setMsg(text, kind){
 }
 
 function showGame(){
-  const lw = document.getElementById("lockWrap");
-  if (lw) lw.style.display = "none";
   document.getElementById("lock").classList.add("hide");
   document.getElementById("game").classList.add("show");
 }
 
-function startGateTransition(){
-  // Create overlay once per transition
-  let ov = document.getElementById("burstOverlay");
-  if (!ov){
-    ov = document.createElement("div");
-    ov.id = "burstOverlay";
-    document.body.appendChild(ov);
-  }
-  // Ensure lock UI is not interactive during transition
-  const lock = document.getElementById("lock");
-  if (lock) lock.style.pointerEvents = "none";
-
-  ov.classList.remove("play");
-  // restart animation reliably
-  void ov.offsetWidth;
-  ov.classList.add("play");
-
-  // Whiteout peak ~0.6s: swap to game, then fade in
-  window.setTimeout(()=>{
-    showGame();
-    const game = document.getElementById("game");
-    if (game){
-      game.classList.remove("fade-in");
-      void game.offsetWidth;
-      game.classList.add("fade-in");
-    }
-  }, 620);
-
-  // Cleanup overlay shortly after fade-in begins
-  window.setTimeout(()=>{
-    ov.classList.remove("play");
-    if (lock) lock.style.pointerEvents = "";
-  }, 1400);
-}
-
-
-
 function showLock(){
-  const lw = document.getElementById("lockWrap");
-  if (lw) lw.style.display = "";
   document.getElementById("game").classList.remove("show");
   document.getElementById("lock").classList.remove("hide");
 }
@@ -5231,15 +6353,14 @@ async function apiPost(payload){
   if (!API_URL || API_URL.includes("PASTE_YOUR")) {
     throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
   }
+
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS preflight回避
     body: JSON.stringify(payload),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
-  return await res.json();
-});
+
   if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
   return await res.json();
 }
@@ -5271,7 +6392,7 @@ async function unlock(){
 localStorage.setItem(LS_UNLOCKED, "1");
 setMsg("解錠しました。", "ok");
 playUnlockAudioOnce();
-startGateTransition();
+showGame();
 }
 
 document.getElementById("unlockBtn").addEventListener("click", unlock);
@@ -5289,190 +6410,5 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   else showLock();
 })();
 </script>
-
-<script id="unlock-system-fix">
-/* Unlock system fix: do NOT change any UI text; only ensure unlock flow runs reliably. */
-(function(){
-  "use strict";
-  function $(id){ return document.getElementById(id); }
-
-  // Reuse existing API_URL if present; otherwise define a default.
-  if (typeof window.API_URL === "undefined") {
-    window.API_URL = 'https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec';
-  }
-
-  function normalizePasscode(s){
-    return (s || "")
-      .toString()
-      .normalize("NFKC")
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-  }
-
-  async function apiPost(payload){
-    const url = window.API_URL;
-    if (!url || typeof url !== "string") {
-      throw new Error("API_URLが未設定です。");
-    }
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
-    }
-    return await res.json();
-  }
-
-  // Safe message output (preserves whatever CSS is already used)
-  function setMsg(text, cls){
-    const el = $("msg");
-    if (!el) return;
-    el.textContent = text || "";
-    // keep base class "msg" if present
-    el.className = cls ? ("msg " + cls) : "msg";
-  }
-
-  // Minimal show/hide that matches existing CSS (.game.show / .lock.hide)
-  function showGame(){
-    const lock = $("lock");
-    const game = $("game");
-    if (lock) lock.classList.add("hide");
-    if (game) {
-      game.classList.add("show");
-      // Optional fade-in if class exists
-      game.classList.add("fade-in");
-      setTimeout(()=>{ try{ game.classList.remove("fade-in"); }catch(_){} }, 650);
-    }
-  }
-  function showLock(){
-    const lock = $("lock");
-    const game = $("game");
-    if (lock) lock.classList.remove("hide");
-    if (game) game.classList.remove("show");
-  }
-
-  // Respect existing storage key if defined elsewhere; otherwise fallback.
-  const KEY = (typeof window.LS_UNLOCKED !== "undefined") ? window.LS_UNLOCKED : "match3_unlocked";
-
-  function isUnlocked(){
-    try{ return localStorage.getItem(KEY) === "1"; }catch(_){ return false; }
-  }
-  function setUnlocked(){
-    try{ localStorage.setItem(KEY, "1"); }catch(_){}
-  }
-
-  function playGateTransitionOrShow(){
-    // If your page already defines a transition function, call it.
-    if (typeof window.startGateTransition === "function") {
-      try{ window.startGateTransition(); return; }catch(_){}
-    }
-    // If it defines its own showGame, prefer it.
-    if (typeof window.showGame === "function") {
-      try{ window.showGame(); return; }catch(_){}
-    }
-    // Fallback
-    showGame();
-  }
-
-  async function unlockFlow(){
-    const btn = $("unlockBtn");
-    const input = $("passcode");
-
-    if (!btn || !input) {
-      // If the UI is missing, do nothing (but avoid crashing).
-      setMsg("解錠画面の要素が見つかりません。", "err");
-      return;
-    }
-
-    // Always show activity
-    const prevText = btn.textContent;
-    btn.disabled = true;
-    try{ btn.classList.add("is-busy"); }catch(_ ){}
-    btn.textContent = "照合中…";
-    setMsg("", "");
-
-    try{
-      const pass = normalizePasscode(input.value || "");
-      if (!pass) {
-        setMsg("パスキーを入力してください。", "err");
-        return;
-      }
-
-      const data = await apiPost({ action:"redeem", passcode: pass });
-
-      if (!data || !data.ok) {
-        const err = (data && data.error) ? data.error : "UNKNOWN";
-        if (err === "NO_MATCH") setMsg("パスキーが異なります。パスキーを確認してください。", "err");
-        else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
-        else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
-        else setMsg("エラー: " + err, "err");
-        return;
-      }
-
-      // success
-      setUnlocked();
-      setMsg("解錠しました。", "ok");
-
-      // Optional sound hook if present
-      if (typeof window.playUnlockAudioOnce === "function") {
-        try{ window.playUnlockAudioOnce(); }catch(_){}
-      }
-
-      playGateTransitionOrShow();
-
-    } catch(e) {
-      setMsg((e && (e.message||String(e))) || "通信に失敗しました。", "err");
-    } finally {
-      btn.disabled = false;
-      try{ btn.classList.remove("is-busy"); }catch(_ ){}
-      btn.textContent = prevText;
-    }
-  }
-
-  function bind(){
-    const btn = $("unlockBtn");
-    const input = $("passcode");
-
-    if (btn) {
-      btn.addEventListener("click", function(ev){ ev.preventDefault(); unlockFlow(); });
-    }
-    if (input) {
-      input.addEventListener("keydown", function(ev){
-        if (ev.key === "Enter") {
-          ev.preventDefault();
-          if (btn) btn.click();
-        }
-      });
-    }
-
-    // initial view
-    if (isUnlocked()) {
-      // prefer existing showGame if present
-      if (typeof window.showGame === "function") {
-        try{ window.showGame(); return; }catch(_){}
-      }
-      showGame();
-    } else {
-      if (typeof window.showLock === "function") {
-        try{ window.showLock(); return; }catch(_){}
-      }
-      showLock();
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bind);
-  } else {
-    bind();
-  }
-
-  // expose for manual testing
-  window.__unlockFlow = unlockFlow;
-})();
-</script>
-
 </body>
 </html>
