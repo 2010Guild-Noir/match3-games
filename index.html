@@ -103,7 +103,7 @@
     #lock .foot{ margin-top:14px; color:#b9b9c6; font-size:12px; line-height:1.5; }
 
     /* Debug button wrapper */
-    #clearBtnWrap{ position:fixed; left:12px; bottom:12px; z-index:2147483647; }
+    #clearBtnWrap{ position:fixed; left:12px; bottom:12px; z-index:2147483647; display:none; }
     #clearBtnWrap .smallbtn{
       padding:10px 12px;
       border-radius:12px;
@@ -1256,6 +1256,8 @@ html.ios #indexModal .vol-toggle{
   function showGame(){
     document.documentElement.classList.remove("locked");
     document.getElementById("lock")?.classList.add("hide");
+    const cbw = document.getElementById("clearBtnWrap");
+    if (cbw) cbw.style.display = "block";
   }
 
   function startGameFadeIn(){
@@ -1274,6 +1276,8 @@ html.ios #indexModal .vol-toggle{
   function showLock(){
     document.documentElement.classList.add("locked");
     document.getElementById("lock")?.classList.remove("hide");
+    const cbw = document.getElementById("clearBtnWrap");
+    if (cbw) cbw.style.display = "none";
   }
 
   function playUnlockAudioOnce(){
