@@ -1,15 +1,165 @@
 <!DOCTYPE html>
 <head>
+  <!-- ==== PASSKEY LOCK + UNLOCK FX (added) ==== -->
+  <style>
+    /* Prevent a brief flash of the passkey screen on already-unlocked devices */
+    html{ visibility:hidden; }
+    html.ready{ visibility:visible; }
 
-<script>
-// Supporter gate: avoid lock-screen flash on already-unlocked devices
-(function(){
-  try{
-    var k = 'supporter_unlocked_v1';
-    if (localStorage.getItem(k) === '1') document.documentElement.classList.add('supporter-unlocked');
-  }catch(_){ }
-})();
-</script>
+    /* Locked: hide everything except our lock/fx/debug UI */
+    html.locked body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+      opacity:0 !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+    }
+    html.locked body{ overflow:hidden; }
+
+    /* Pre-unlocked (already unlocked): ensure lock never flashes */
+    html.pre-unlocked #lock{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+
+    /* ===== Passkey overlay ===== */
+    #lock{
+      position:fixed; inset:0; z-index:9998;
+      display:flex; align-items:center; justify-content:center;
+      padding:24px;
+      background:linear-gradient(180deg,#0b0b0d,#000);
+      color:#eaeaf0;
+      opacity:1; visibility:visible; pointer-events:auto;
+      transition:opacity .25s ease;
+    }
+    #lock.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+
+    #lock .panel{
+      width:min(720px,100%);
+      background:rgba(20,20,24,.92);
+      border:1px solid #2a2a33;
+      border-radius:18px;
+      padding:22px 18px;
+      box-shadow:0 10px 35px rgba(0,0,0,.55);
+    }
+    #lock .desc{ margin:0 0 14px; color:#b9b9c6; line-height:1.6; }
+    #lock label{ display:block; margin:12px 0 6px; color:#b9b9c6; font-size:13px; }
+    #lock .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    #lock input{
+      flex:1; min-width:220px; padding:12px 12px;
+      border-radius:12px; border:1px solid #2a2a33;
+      background:#0e0e13; color:#eaeaf0; font-size:16px; outline:none;
+    }
+    #lock input:focus{ border-color:#5a5a74; box-shadow:0 0 0 3px rgba(90,90,116,.25); }
+
+    #lock .msg{ margin-top:12px; line-height:1.6; }
+    #lock .msg.ok{ color:#7CFFB2; }
+    #lock .msg.err{ color:#ff6b6b; }
+
+    /* PASSKEY SCREEN: Mincho (solemn) */
+    #lock, #lock .desc, #lock label, #lock input, #lock .foot, #lock .msg, #lock button{
+      font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
+      letter-spacing:.04em;
+    }
+
+    /* button style (match existing btn-reset look) */
+    #lock button{
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid #2a2a33;
+      font-size:15px;
+      cursor:pointer;
+      transition:transform .05s ease, box-shadow .18s ease, border-color .2s ease;
+    }
+    #lock .btn-reset{
+      background:linear-gradient(180deg,#6e2222,#421515);
+      border-color:#a53939;
+      color:#ffeded;
+      box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(255, 100, 100, 0);
+    }
+    #lock .btn-reset:hover, #lock .btn-reset.hover-glow{
+      transform:translateY(-1px);
+      border-color:#c84f4f;
+      box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(255, 100, 100, 0.5);
+    }
+    #lock .btn-reset:active{
+      transform:translateY(0);
+      box-shadow:0 6px 14px rgba(0,0,0,.44) inset;
+    }
+
+    #lock .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:13px; word-break:break-all;
+      background:#0e0e13; border:1px dashed #2a2a33;
+      border-radius:12px; padding:10px 12px; margin-top:8px;
+    }
+    #lock .foot{ margin-top:14px; color:#b9b9c6; font-size:12px; line-height:1.5; }
+
+    /* Debug button wrapper */
+    #clearBtnWrap{ position:fixed; left:12px; bottom:12px; z-index:10050; }
+    #clearBtnWrap .smallbtn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #2a2a33;
+      background:#1f1f2a;
+      color:#eaeaf0;
+      font-size:13px;
+      cursor:pointer;
+      font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+      letter-spacing:0;
+    }
+    #clearBtnWrap .smallbtn:hover{ background:#2a2a3a; }
+
+    /* ===== Unlock transition: center light burst -> whiteout (full overlay) -> game fade-in ===== */
+    #burstOverlay{
+      position:fixed; inset:0; pointer-events:none;
+      z-index:10000; opacity:0;
+    }
+    #burstOverlay.play{ opacity:1; }
+    #burstOverlay::before{
+      content:"";
+      position:absolute; inset:-20%;
+      background: radial-gradient(circle at center,
+        rgba(255,255,255,0.0) 0%,
+        rgba(255,255,255,0.0) 18%,
+        rgba(255,255,255,0.35) 28%,
+        rgba(255,255,255,0.85) 44%,
+        rgba(255,255,255,1.0) 58%,
+        rgba(255,255,255,1.0) 100%);
+      transform: scale(0.15);
+      filter: blur(2px);
+      opacity:0;
+      animation: burstWhite 1.05s ease-out forwards;
+    }
+    @keyframes burstWhite{
+      0%   { transform:scale(0.15); opacity:0; filter:blur(2px); }
+      10%  { opacity:0.65; }
+      55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
+      100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
+    }
+
+    #unlockFx{
+      position:fixed; inset:0; background:#fff;
+      opacity:0; clip-path:circle(0% at 50% 50%);
+      pointer-events:none; z-index:10001;
+      transition:opacity .4s ease;
+    }
+    #unlockFx.run{ opacity:1; animation:unlockFlash .55s ease-out forwards; }
+    #unlockFx.fade{ opacity:0; }
+    @keyframes unlockFlash{
+      from{ clip-path:circle(0% at 50% 50%); }
+      to  { clip-path:circle(150% at 50% 50%); }
+    }
+  </style>
+  <script>
+  (function(){
+    try{
+      var k = "supporter_unlocked_v1";
+      if (localStorage.getItem(k) === "1") {
+        document.documentElement.classList.add("pre-unlocked");
+      } else {
+        document.documentElement.classList.add("locked");
+      }
+    }catch(e){ document.documentElement.classList.add("locked"); }
+    document.documentElement.classList.add("ready");
+  })();
+  </script>
+  <!-- ==== /PASSKEY LOCK + UNLOCK FX ==== -->
 
 
 <script>
@@ -1040,103 +1190,180 @@ html.ios #indexModal .vol-toggle{
 }
 </style>
 
-
-<style id="supporter-gate-style">
-/* === Supporter Passkey Gate (UI-only; does not touch game system) === */
-#supporterLockOverlay{
-  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-  background:rgba(0,0,0,0.88);
-  z-index: 99990;
-}
-html:not(.supporter-unlocked) #supporterLockOverlay{ display:flex; }
-
-#supporterLockPanel{
-  width:min(92vw, 520px);
-  background: linear-gradient(180deg, rgba(20,20,25,0.96), rgba(10,10,12,0.98));
-  border: 1px solid rgba(165,57,57,0.45);
-  border-radius: 16px;
-  padding: 18px 16px 16px;
-  box-shadow: 0 24px 70px rgba(0,0,0,.65), 0 1px 0 rgba(255,255,255,.06) inset;
-  color: #f5f7fb;
-  text-align:left;
-}
-#supporterLockPanel .desc{ margin:0 0 14px; line-height:1.75; color: rgba(245,247,251,0.92); }
-#supporterLockPanel label{ display:block; font-weight:700; margin: 8px 0 6px; }
-#supporterLockPanel .row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin: 8px 0 6px; }
-#supporterPasscode{
-  flex:1; min-width: 200px;
-  padding: 10px 12px;
-  font-size: 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.55);
-  color: #eaf6ff;
-  outline:none;
-}
-#supporterPasscode::placeholder{ color: rgba(200,230,255,0.45); }
-
-#supporterMsg{ margin-top: 8px; font-size: 13px; min-height: 1.4em; }
-#supporterMsg.ok{ color:#b7ffd4; }
-#supporterMsg.err{ color:#ffb0b0; }
-
-#supporterFoot{ margin-top: 12px; font-size: 12px; color: rgba(245,247,251,0.72); line-height: 1.65; }
-
-.smallbtn{
-  display:inline-flex; align-items:center; justify-content:center;
-  font-weight:700; font-size:12px;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: linear-gradient(180deg,#202126,#14151a);
-  color:#fff;
-  cursor:pointer;
-}
-.smallbtn:hover{ filter: brightness(1.08); }
-
-/* Unlock FX: white burst + short whiteout, then fade-in the existing game UI */
-#unlockFxOverlay{
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  z-index: 99995;
-}
-#unlockFxOverlay.play{ opacity: 1; }
-#unlockFxOverlay::before{
-  content:"";
-  position:absolute;
-  inset:-20%;
-  background: radial-gradient(circle at center,
-    rgba(255,255,255,0.0) 0%,
-    rgba(255,255,255,0.0) 18%,
-    rgba(255,255,255,0.35) 28%,
-    rgba(255,255,255,0.85) 44%,
-    rgba(255,255,255,1.0) 58%,
-    rgba(255,255,255,1.0) 100%);
-  transform: scale(0.15);
-  filter: blur(2px);
-  opacity: 0;
-}
-#unlockFxOverlay.play::before{
-  animation: unlockBurst 1.05s ease-out forwards;
-}
-@keyframes unlockBurst{
-  0%   { transform:scale(0.15); opacity:0; filter:blur(2px); }
-  10%  { opacity:0.65; }
-  55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
-  100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
-}
-
-/* Fade-in the existing game UI wrapper only (no translate/size changes to avoid layout shifts) */
-html.supporter-fading-in .wrap{ opacity:0; }
-html.supporter-fading-in.supporter-fade-ready .wrap{
-  transition: opacity .55s ease-out;
-  opacity: 1;
-}
-</style>
-
 </head>
 <body>
+  <!-- ==== PASSKEY LOCK UI (added) ==== -->
+  <div id="lock" role="dialog" aria-modal="true" aria-label="パスキー入力">
+    <div class="panel">
+      <p class="desc">
+        <b>「永遠の焦土パズル」へようこそ</b><br/><br/>
+        お客様専用パスキーを入力してください。<br/>
+        パスキーは使い切りのため、他の端末には使えなくなります。<br/>
+        この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
+      </p>
+
+      <label for="passcode">パスキー</label>
+      <div class="row">
+        <input id="passcode" inputmode="latin" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+               name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
+        <button id="unlockBtn" class="btn-reset">焦土の門を開く</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="foot">
+        うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）<br/>
+        ※解錠後はブラウザの履歴削除をしないようご注意ください。<br/><br/>
+        Ⓒ2010 Guild Noir. 修羅王丸®
+      </div>
+    </div>
+  </div>
+
+  <div id="clearBtnWrap">
+    <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
+  </div>
+
+  <div id="burstOverlay" aria-hidden="true"></div>
+  <div id="unlockFx" aria-hidden="true"></div>
+
+  <script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
+  const LS_UNLOCKED = "supporter_unlocked_v1";
+
+  function normalizePasscode(s){
+    return (s || "").toString().normalize("NFKC").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  }
+
+  function setMsg(text, kind){
+    const el = document.getElementById("msg");
+    if (!el) return;
+    el.textContent = text || "";
+    el.className = "msg" + (kind ? " " + kind : "");
+  }
+
+  function showGame(){
+    document.documentElement.classList.remove("locked");
+    document.getElementById("lock")?.classList.add("hide");
+  }
+
+  function showLock(){
+    document.documentElement.classList.add("locked");
+    document.getElementById("lock")?.classList.remove("hide");
+  }
+
+  function playUnlockAudioOnce(){
+    if (window.__unlockAudioPlayed) return;
+    window.__unlockAudioPlayed = true;
+    const vo = document.getElementById("vo_reset");
+    const bell = document.getElementById("se_bell");
+    if (!vo || !bell) return;
+    try{ vo.currentTime = 0; }catch(_e){}
+    try{ bell.currentTime = 0; }catch(_e){}
+    try{ vo.play(); }catch(_e){}
+    try{ bell.play(); }catch(_e){}
+  }
+
+  function runUnlockFxThenShowGame(){
+    if (window.__unlockFxRunning) return;
+    window.__unlockFxRunning = true;
+
+    const burst = document.getElementById("burstOverlay");
+    const fx = document.getElementById("unlockFx");
+
+    // start burst + whiteout
+    if (burst) {
+      burst.classList.remove("play");
+      // restart animation
+      void burst.offsetWidth;
+      burst.classList.add("play");
+    }
+    if (fx) {
+      fx.classList.remove("run","fade");
+      void fx.offsetWidth;
+      fx.classList.add("run");
+    }
+
+    // show game right after whiteout completes (timed to unlockFlash)
+    window.setTimeout(()=>{
+      showGame();
+      if (fx) requestAnimationFrame(()=>fx.classList.add("fade"));
+    }, 560);
+
+    // cleanup overlays
+    window.setTimeout(()=>{
+      if (fx) {
+        fx.classList.remove("run","fade");
+        fx.style.clipPath = "circle(0% at 50% 50%)";
+      }
+      if (burst) burst.classList.remove("play");
+      window.__unlockFxRunning = false;
+    }, 1400);
+  }
+
+  async function apiPost(payload){
+    if (!API_URL || API_URL.includes("PASTE_YOUR")) {
+      throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
+    }
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS preflight回避
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
+    return await res.json();
+  }
+
+  async function unlock(){
+    setMsg("", "");
+    const raw = document.getElementById("passcode")?.value || "";
+    const pass = normalizePasscode(raw);
+    if (!pass){ setMsg("パスキーを入力してください。", "err"); return; }
+
+    setMsg("照合中…", "");
+    let data;
+    try{
+      data = await apiPost({ action:"redeem", passcode: pass });
+    }catch(e){
+      setMsg(e.message || String(e), "err");
+      return;
+    }
+
+    if (!data || !data.ok){
+      const err = (data && data.error) ? data.error : "UNKNOWN";
+      if (err === "NO_MATCH") setMsg("パスキーが異なります。パスキーを確認してください。", "err");
+      else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
+      else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
+      else setMsg("エラー: " + err, "err");
+      return;
+    }
+
+    localStorage.setItem(LS_UNLOCKED, "1");
+    setMsg("解錠しました。", "ok");
+    playUnlockAudioOnce();
+    runUnlockFxThenShowGame();
+  }
+
+  document.getElementById("unlockBtn")?.addEventListener("click", unlock);
+  document.getElementById("passcode")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
+
+  document.getElementById("clearBtn")?.addEventListener("click", ()=>{
+    try{ localStorage.removeItem(LS_UNLOCKED); }catch(_e){}
+    window.__unlockAudioPlayed = false;
+    document.getElementById("passcode").value = "";
+    setMsg("", "");
+    showLock();
+  });
+
+  (function boot(){
+    try{
+      if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
+      else showLock();
+    }catch(_e){ showLock(); }
+  })();
+  </script>
+  <!-- ==== /PASSKEY LOCK UI ==== -->
+
   
 <script>
 /* Storage helper (polyfill) */
@@ -6121,225 +6348,6 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-
-<script id="supporter-gate-script">
-(function(){
-  'use strict';
-
-  const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
-  const LS_UNLOCKED = 'supporter_unlocked_v1';
-
-  function normalizePasscode(s){
-    return (s || '')
-      .toString()
-      .normalize('NFKC')
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '');
-  }
-
-  function setMsg(text, kind){
-    const el = document.getElementById('supporterMsg');
-    if(!el) return;
-    el.textContent = text || '';
-    el.className = kind ? kind : '';
-    el.id = 'supporterMsg';
-  }
-
-  function playUnlockAudioOnce(){
-    if (window.__unlockAudioPlayed) return;
-    window.__unlockAudioPlayed = true;
-
-    const vo = document.getElementById('vo_reset');
-    const bell = document.getElementById('se_bell');
-    if (!vo || !bell) return;
-
-    try{ vo.currentTime = 0; }catch(_){ }
-    try{ bell.currentTime = 0; }catch(_){ }
-
-    // 同時に再生（ボタン押下＝ユーザー操作内で呼ぶ）
-    try{ const p1 = vo.play(); if(p1 && p1.catch) p1.catch(function(){}); }catch(_){ }
-    try{ const p2 = bell.play(); if(p2 && p2.catch) p2.catch(function(){}); }catch(_){ }
-  }
-
-  async function apiPost(payload){
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      cache: 'no-store',
-    });
-    if (!res.ok) throw new Error('API通信に失敗しました（HTTP ' + res.status + '）');
-    return await res.json();
-  }
-
-  function hideLockUI(){
-    document.documentElement.classList.add('supporter-unlocked');
-    const ov = document.getElementById('supporterLockOverlay');
-    if (ov) ov.style.display = 'none';
-    setDebugBtnVisible();
-  }
-
-  function setDebugBtnVisible(){
-    const b = document.getElementById('clearBtn');
-    if (!b) return;
-    let unlocked = false;
-    try{ unlocked = (localStorage.getItem(LS_UNLOCKED) === '1'); }catch(_){ unlocked = false; }
-    b.style.display = unlocked ? 'block' : 'none';
-  }
-
-  function showLockUI(){
-    // Return to passkey screen without reloading or touching game layout.
-    document.documentElement.classList.remove('supporter-unlocked');
-    document.documentElement.classList.remove('supporter-fading-in');
-
-    const ov = document.getElementById('supporterLockOverlay');
-    if (ov) ov.style.display = 'flex';
-
-    const fx = document.getElementById('unlockFxOverlay');
-    if (fx){
-      fx.classList.remove('play');
-      fx.style.opacity = '0';
-    }
-
-    const inp = document.getElementById('supporterPasscode');
-    if (inp){
-      inp.value = '';
-      try{ inp.focus(); }catch(_){ }
-    }
-
-    setDebugBtnVisible();
-  }
-
-  function runUnlockFx(){
-    // 1) white burst + whiteout
-    const fx = document.getElementById('unlockFxOverlay');
-    if (!fx) return;
-
-    // 2) game fade-in (opacity only, no layout changes)
-    document.documentElement.classList.add('supporter-fading-in');
-
-    // force reflow for transition to apply reliably
-    try{ void document.body.offsetHeight; }catch(_){ }
-
-    fx.classList.remove('play');
-    // restart animation
-    try{ void fx.offsetWidth; }catch(_){ }
-    fx.classList.add('play');
-
-    // When burst reaches whiteout peak (~55%), start fade-in
-    setTimeout(function(){
-      document.documentElement.classList.add('supporter-fade-ready');
-    }, 560);
-
-    // Fade-out FX overlay near the end
-    setTimeout(function(){
-      try{ fx.style.transition = 'opacity .35s ease-out'; fx.style.opacity = '0'; }catch(_){ }
-    }, 980);
-
-    // Cleanup
-    setTimeout(function(){
-      try{ fx.classList.remove('play'); fx.style.opacity='0'; }catch(_){ }
-      document.documentElement.classList.remove('supporter-fading-in');
-      document.documentElement.classList.remove('supporter-fade-ready');
-    }, 1400);
-  }
-
-  async function onUnlockClick(){
-    setMsg('', '');
-    const input = document.getElementById('supporterPasscode');
-    const raw = input ? input.value : '';
-    const pass = normalizePasscode(raw);
-
-    if (!pass){ setMsg('パスキーを入力してください。', 'err'); return; }
-
-    setMsg('照合中…', '');
-    let data;
-    try{
-      data = await apiPost({ action: 'redeem', passcode: pass });
-    }catch(e){
-      setMsg(e && e.message ? e.message : String(e), 'err');
-      return;
-    }
-
-    if (!data || !data.ok){
-      const err = (data && data.error) ? data.error : 'UNKNOWN';
-      if (err === 'NO_MATCH') setMsg('パスキーが異なります。パスキーを確認してください。', 'err');
-      else if (err === 'USED') setMsg('このパスキーは既に使用されています。別のパスキーが必要です。', 'err');
-      else if (err === 'EMPTY') setMsg('パスキーを入力してください。', 'err');
-      else setMsg('エラー: ' + err, 'err');
-      return;
-    }
-
-    try{ localStorage.setItem(LS_UNLOCKED, '1'); }catch(_){ }
-    setMsg('解錠しました。', 'ok');
-
-    // order matters: audio + fx should happen while we still have a user gesture context
-    playUnlockAudioOnce();
-
-    // Hide lock UI immediately so it never overlaps/fights layout
-    hideLockUI();
-
-    // Visual effect (does not touch game canvas or layout)
-    runUnlockFx();
-  }
-
-  function clearUnlock(){
-    try{ localStorage.removeItem(LS_UNLOCKED); }catch(_){ }
-    try{ localStorage.removeItem('supporter_unlocked_v1'); }catch(_){ }
-    showLockUI();
-  }
-
-  function boot(){
-    // Already unlocked
-    let unlocked = false;
-    try{ unlocked = (localStorage.getItem(LS_UNLOCKED) === '1'); }catch(_){ }
-    if (unlocked){
-      hideLockUI();
-      return;
-    }
-
-    // Wire events
-    const btn = document.getElementById('supporterUnlockBtn');
-    if (btn) btn.addEventListener('click', onUnlockClick);
-
-    const input = document.getElementById('supporterPasscode');
-    if (input){
-      input.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') onUnlockClick();
-      });
-    }
-
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) clearBtn.addEventListener('click', clearUnlock);
-
-    // Ensure overlay is visible when locked
-    const ov = document.getElementById('supporterLockOverlay');
-    if (ov) ov.style.display = 'flex';
-  }
-
-  setDebugBtnVisible();
-
-  if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-})();
-</script>
-
-
-<!-- Debug: clear unlock (remove in release) -->
-<button class="smallbtn debug-clear" id="clearBtn" type="button">この端末の解錠を解除</button>
-<style>
-  /* Debug button should not affect game layout */
-  #clearBtn.debug-clear{
-    position: fixed;
-    right: 12px;
-    bottom: 12px;
-    z-index: 2147483000;
-    display: none;
-  }
-</style>
 </body>
 </html>
 <script>
