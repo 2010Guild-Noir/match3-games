@@ -1,182 +1,5 @@
-<!doctype html>
-<html lang="ja">
+<!DOCTYPE html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta http-equiv="x-ua-compatible" content="ie=edge" />
-  <style>
-    /* Prevent a brief flash of the passcode screen on already-unlocked devices */
-    html{ visibility:hidden; }
-    html.ready{ visibility:visible; }
-    html.pre-unlocked #lock{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
-    html.pre-unlocked #game{ opacity:1 !important; visibility:visible !important; pointer-events:auto !important; }
-  </style>
-  <script>
-  (function(){
-    try{
-      var k = "supporter_unlocked_v1"; // must match LS_UNLOCKED
-      if (localStorage.getItem(k) === "1") {
-        document.documentElement.classList.add("pre-unlocked");
-      }
-    }catch(e){}
-    // Reveal after we applied the initial state.
-    document.documentElement.classList.add("ready");
-  })();
-  </script>
-  <title>修羅王丸 永遠の焦土パズル</title>
-  <meta name="format-detection" content="telephone=no" />
-  <style>
-    :root{
-      --bg:#0b0b0d; --text:#eaeaf0; --muted:#b9b9c6; --danger:#ff6b6b; --ok:#7CFFB2;
-      --line:#2a2a33; --btn:#1f1f2a; --btn2:#2a2a3a;
-    }
-    html,body{height:100%;}
-    body{margin:0;background:linear-gradient(180deg,var(--bg),#000);color:var(--text);
-         font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
-    .panel{width:min(720px,100%);background:rgba(20,20,24,.92);border:1px solid var(--line);
-           border-radius:18px;padding:22px 18px;box-shadow:0 10px 35px rgba(0,0,0,.55);}
-    .title{margin:0 0 10px;font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
-           letter-spacing:.06em;font-weight:700;font-size:22px;text-shadow:0 1px 0 rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.5);}
-    .desc{margin:0 0 14px;color:var(--muted);line-height:1.6;}
-    label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    input{flex:1;min-width:220px;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
-          background:#0e0e13;color:var(--text);font-size:16px;outline:none;}
-    input:focus{border-color:#5a5a74;box-shadow:0 0 0 3px rgba(90,90,116,.25);}
-    button{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--btn);color:var(--text);
-           font-size:15px;cursor:pointer;transition:transform .05s ease, background .15s ease;
-           font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;letter-spacing:.05em;}
-    button:hover{background:var(--btn2);} button:active{transform:translateY(1px);}
-    .smallbtn{padding:10px 12px;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
-              letter-spacing:0;font-size:13px;}
-    .hr{height:1px;background:var(--line);margin:18px 0;}
-    .msg{margin-top:12px;line-height:1.6;} .msg.ok{color:var(--ok);} .msg.err{color:var(--danger);}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:13px;
-          word-break:break-all;background:#0e0e13;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;}
-    .note{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5;}
-    .foot{margin-top:14px;color:var(--muted);font-size:12px;}
-    .game{opacity:0; visibility:hidden; pointer-events:none; transition:opacity .45s ease;}
-    .game.show{opacity:1; visibility:visible; pointer-events:auto;}
-    .lock{opacity:1; visibility:visible; pointer-events:auto; transition:opacity .25s ease;}
-    .lock.hide{opacity:0; visibility:hidden; pointer-events:none;}
-
-    /* ====== UNLOCK LOGIN FX ====== */
-    #unlockFx{position:fixed; inset:0; background:#fff; opacity:0; clip-path:circle(0% at 50% 50%); pointer-events:none; z-index:9999; transition:opacity .4s ease;}
-    #unlockFx.run{opacity:1; animation:unlockFlash .55s ease-out forwards;}
-    #unlockFx.fade{opacity:0;}
-    @keyframes unlockFlash{from{clip-path:circle(0% at 50% 50%);}to{clip-path:circle(150% at 50% 50%);}}
-
-/* ====== PASSCODE SCREEN: Mincho (solemn) ====== */
-#lock,
-#lock .desc,
-#lock label,
-#lock input,
-#lock .foot,
-#lock .msg{
-  font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho","MS Mincho",serif;
-  letter-spacing:.04em;
-}
-
-#lock input::placeholder{
-  letter-spacing:.03em;
-}
-
-/* ====== btn-reset (same as game reset button) ====== */
-.btn-reset{ 
-  background:linear-gradient(180deg,#6e2222,#421515); 
-  border-color:#a53939; 
-  color:#ffeded; 
-  /* ボタンのホバー時の発光を赤系に */
-  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.35), 0 0 0 rgba(255, 100, 100, 0);
-}
-.btn-reset:hover, .btn-reset.hover-glow{ 
-  transform:translateY(-1px); 
-  border-color:#c84f4f; 
-  box-shadow:0 14px 28px rgba(0,0,0,.44), 0 0 10px rgba(255, 100, 100, 0.5); /* 赤系発光 */
-}
-.btn-reset:active{ 
-  transform:translateY(0); 
-  box-shadow:0 6px 14px rgba(0,0,0,.44) inset; 
-}
-  
-/* ===== Unlock transition: center light burst -> whiteout -> game fade-in ===== */
-#burstOverlay{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:10000;
-  opacity:0;
-}
-#burstOverlay.play{
-  opacity:1;
-}
-#burstOverlay::before{
-  content:"";
-  position:absolute;
-  inset:-20%;
-  background: radial-gradient(circle at center,
-    rgba(255,255,255,0.0) 0%,
-    rgba(255,255,255,0.0) 18%,
-    rgba(255,255,255,0.35) 28%,
-    rgba(255,255,255,0.85) 44%,
-    rgba(255,255,255,1.0) 58%,
-    rgba(255,255,255,1.0) 100%);
-  transform: scale(0.15);
-  filter: blur(2px);
-  opacity:0;
-  animation: burstWhite 1.05s ease-out forwards;
-}
-
-@keyframes burstWhite{
-  0%   { transform:scale(0.15); opacity:0; filter:blur(2px); }
-  10%  { opacity:0.65; }
-  55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
-  100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
-}
-
-/* game fade-in (quiet) */
-#game.fade-in{
-  animation: gameFadeIn .55s ease-out both;
-}
-@keyframes gameFadeIn{
-  from{ opacity:0; transform: translateY(6px); filter: blur(1px); }
-  to  { opacity:1; transform: translateY(0); filter: blur(0); }
-}
-/* ===== end transition ===== */
-
-</style>
-
-  <link rel="icon" href="./favicon.ico?v=1" sizes="any">
-  <link rel="icon" href="./images/favicon.svg?v=1" type="image/svg+xml">
-  <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png?v=1">
-  <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png?v=1">
-  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png?v=1">
-</head>
-
-<body>
- <div class="wrap">
-       <div class="panel">
-      <div id="lock" class="lock">
-        <p class="desc">
-          <b>「永遠の焦土パズル」へようこそ</b><br/><br/>お客様専用パスキーを入力してください。<br/>パスキーは使い切りのため、他の端末には使えなくなります。<br/> この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
-        </p>
-
-        <label for="passcode">パスキー</label>
-        <div class="row">
-          <input id="passcode" inputmode="latin" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
-                 name="supporter-passcode" placeholder="8桁の英数字を入力してください" />
-          <button id="unlockBtn" class="btn btn-reset gate-btn">焦土の門を開く</button>
-        </div>
-
-        <div id="msg" class="msg"></div>
-
-        <div class="foot">
-          うまくいかない時：URL末尾に <span class="mono" style="display:inline; padding:2px 6px;">?v=8</span> を付けてリロードしてください（キャッシュ回避）<br/> ※解錠後はブラウザの履歴削除をしないようご注意ください。<br/><br/>Ⓒ2010 Guild Noir. 修羅王丸®
-        </div>
-      </div>
-
-      <div id="game" class="game">
 
 <script>
 /* iOS detection (single source of truth) */
@@ -206,6 +29,22 @@ if (IS_IOS) { document.documentElement.classList.add('ios'); }
 <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png?v=1">
 <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png?v=1">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png?v=1">
+
+
+<!-- Open Graph / Facebook / LINE / Slack など -->
+<meta property="og:title" content="修羅王丸 永遠の焦土パズル">
+<meta property="og:description" content="あなたの指先が 焦土に《 華 》を咲かせる。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://2010guild-noir.github.io/match3-games_demo">
+<meta property="og:image" content="https://2010guild-noir.github.io/match3-games_demo/images/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter（X） -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="修羅王丸 永遠の焦土パズル">
+<meta name="twitter:description" content="あなたの指先が 焦土に《 華 》を咲かせる。。">
+<meta name="twitter:image" content="https://2010guild-noir.github.io/match3-games_demo/images/og_v2.jpg?v=2">
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
@@ -659,7 +498,6 @@ html, body{
   text-shadow: 0 0 6px rgba(120,200,255,0.8);
 }
 #allmaxInput{
-  -webkit-text-security: disc;
   width: 100%;
   margin-top: 10px;
   padding: 10px 12px;
@@ -720,7 +558,6 @@ html, body{
   width:100%;
 }
 #allmaxInput{
-  -webkit-text-security: disc;
   width:min(72vw, 240px);
 }
 #allmaxOkBtn{
@@ -2306,7 +2143,7 @@ const CHARACTERS = [
   { sym: "KUJAKU", name: "クジャク", tag: "式神", desc: "修羅王丸の盟約たる式神。/ 通常の暗躍を担う。", image: "KUJAKU", unlock: { key: "initial" } },
 
   { sym: "S_BIR", name: "ミミック", tag: "修羅王丸", desc: "かつて人と共に在った修羅王丸。/ 縦列消去。", image: "S_BIR", unlock: { key: "rank", value: 0 } }, /* 0に修正 */
-  { sym: "S_NE0", name: "ネオレトロ", tag: "修羅王丸", desc: "人の姿をやめた修羅王丸。/ 縦列＋両隣消去。", image: "S_NE0", unlock: { key: "rank", value: 1 } },
+  { sym: "S_NE0", name: "ネオレトロ", tag: "修羅王丸", desc: "人の姿を辞めた修羅王丸。/ 縦列＋両隣消去。", image: "S_NE0", unlock: { key: "rank", value: 1 } },
   { sym: "S_SHU", name: "シンギュラ", tag: "修羅王丸", desc: "ネオレトロを斬り捨て顕現した存在。/ 周囲を菱形に消去。", image: "S_SHU", unlock: { key: "rank", value: 2 } },
   { sym: "S_REQ", name: "レクイエム", tag: "修羅王丸", desc: "新たな境地を求めて生まれた存在。/ 横列+上下隣消去。", image: "S_REQ", unlock: { key: "rank", value: 3 } },
   { sym: "S_UNK", name: "アンノウン", tag: "修羅王丸", desc: "未だ見ぬ先の境地。/ 斜め✕列消去。", image: "S_UNK", unlock: { key: "rank", value: 4 } },
@@ -2316,7 +2153,7 @@ const CHARACTERS = [
 
   { sym: "J_NEM", name: "合歓", tag: "悔恨", desc: "修羅王丸を恨む娘。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:1", image: "J_NEM", unlock: { key: "juso_spawn", value: true } },
   { sym: "J_SHI", name: "辰十郎", tag: "慙愧", desc: "筑前忍八剣衆の前元締。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:3", image: "J_SHI", unlock: { key: "juso_spawn", value: true } },
-  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む絶対秩序の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
+  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む正義の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
 
 ];
 let unlockedChars = store.get("unlockedChars", { initial: true, juso_spawn: false, SHURACHAN: false, REKUSHURA: false });
@@ -2603,7 +2440,7 @@ const MAX_RANK_INDEX = RANKS.length - 1;
 const NORMALS=["SANZU","MUTSU","HANZO","CHIEKO","KUJAKU"];
 const SPECIALS=RANKS.map(r=>r.key);
 const JUSOS=["J_NEM", "J_SHI", "J_PRO"];
-const RANK_THRESH = [20, 100, 300, 500, 700];//ランクアップ闘値
+const RANK_THRESH = [5, 10, 10, 10, 10];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 10, "S_NE0": 20, "S_SHU": 30, "S_REQ": 40, "S_UNK": 50 };
 
 let board=[], yAnim=[], score=store.get("score",0), rankIndex=store.get("rankIndex",0), rankProgress=store.get("rankProgress",0);
@@ -5843,7 +5680,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 800; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 10; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -6016,7 +5853,7 @@ window.shuffleBoard = function(){
     <h2>― 到達せし者の扉 ―</h2>
     <div id="allmaxInputArea">
       <div id="allmaxInputRow">
-        <input id="allmaxInput" type="text" placeholder="「鍵を持つ者」に提示せよ" autocomplete="off" />
+        <input id="allmaxInput" type="password" placeholder="「鍵を持つ者」に提示せよ" autocomplete="off" />
         <button id="allmaxOkBtn" type="button">OK</button>
       </div>
       <div id="allmaxError">貴方は"未だ"その資格を得てはいないようだ…</div>
@@ -6178,7 +6015,6 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-  <div id="unlockFx" aria-hidden="true"></div>
 </body>
 </html>
 <script>
@@ -6291,169 +6127,3 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-  <div id="unlockFx" aria-hidden="true"></div>
-</body>
-</html>
-
-</div>
-
-        <div class="hr"></div>
-        <div class="row">
-          <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
-        </div>
-        <div class="note">
-          ※解錠解除すると、この端末では再度パスキーが必要になります。<br/>
-          ただしパスキーは一度しか使えないため、解除後に再入力しても通りません。通常は押さないでください。
-        </div>
-      </div>
-    </div>
-  </div>
-
-<script>
-/**
- * Apps Script WebアプリURL（/exec）を貼る
- */
-const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
-
-const LS_UNLOCKED = "supporter_unlocked_v1";
-
-function normalizePasscode(s){
-  return (s || "")
-    .toString()
-    .normalize("NFKC")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-}
-
-function setMsg(text, kind){
-  const el = document.getElementById("msg");
-  el.textContent = text || "";
-  el.className = "msg" + (kind ? " " + kind : "");
-}
-
-function showGame(){
-  document.getElementById("lock").classList.add("hide");
-  document.getElementById("game").classList.add("show");
-}
-
-function showLock(){
-  document.getElementById("game").classList.remove("show");
-  document.getElementById("lock").classList.remove("hide");
-}
-
-
-function runUnlockFxThenShowGame(){
-  // 白い光→ホワイトアウト→ゲーム画面フェードイン
-  if (window.__unlockFxRunning) return;
-  window.__unlockFxRunning = true;
-
-  const fx = document.getElementById("unlockFx");
-  if (!fx){
-    showGame();
-    window.__unlockFxRunning = false;
-    return;
-  }
-
-  // reset
-  fx.classList.remove("run","fade");
-  // start
-  fx.classList.add("run");
-
-  // whiteout完了直後にゲーム表示→フェードイン
-  window.setTimeout(()=>{
-    showGame();
-    // overlayをフェードアウトしてゲームを見せる
-    requestAnimationFrame(()=>fx.classList.add("fade"));
-  }, 560);
-
-  // cleanup
-  window.setTimeout(()=>{
-    fx.classList.remove("run","fade");
-    // clip-path reset (Safari対策)
-    fx.style.clipPath = "circle(0% at 50% 50%)";
-    window.__unlockFxRunning = false;
-  }, 1200);
-}
-
-function playUnlockAudioOnce(){
-  if (window.__unlockAudioPlayed) return;
-  window.__unlockAudioPlayed = true;
-
-  const vo = document.getElementById("vo_reset");
-  const bell = document.getElementById("se_bell");
-
-  // どちらか無ければ安全に何もしない
-  if (!vo || !bell) return;
-
-  try{ vo.currentTime = 0; }catch(_){}
-  try{ bell.currentTime = 0; }catch(_){}
-
-  // 同時に1回だけ
-  try{ vo.play(); }catch(_){}
-  try{ bell.play(); }catch(_){}
-}
-
-async function apiPost(payload){
-  if (!API_URL || API_URL.includes("PASTE_YOUR")) {
-    throw new Error("API_URL が未設定です。Apps Script のWebアプリURLを index.html に貼ってください。");
-  }
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS preflight回避
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
-
-  if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
-  return await res.json();
-}
-
-async function unlock(){
-  setMsg("", "");
-  const raw = document.getElementById("passcode").value || "";
-  const pass = normalizePasscode(raw);
-  if (!pass){ setMsg("パスキーを入力してください。", "err"); return; }
-
-  setMsg("照合中…", "");
-  let data;
-  try{
-    data = await apiPost({ action:"redeem", passcode: pass });
-  }catch(e){
-    setMsg(e.message || String(e), "err");
-    return;
-  }
-
-  if (!data || !data.ok){
-    const err = (data && data.error) ? data.error : "UNKNOWN";
-    if (err === "NO_MATCH") setMsg("パスキーが異なります。パスキーを確認してください。", "err");
-    else if (err === "USED") setMsg("このパスキーは既に使用されています。別のパスキーが必要です。", "err");
-    else if (err === "EMPTY") setMsg("パスキーを入力してください。", "err");
-    else setMsg("エラー: " + err, "err");
-    return;
-  }
-
-localStorage.setItem(LS_UNLOCKED, "1");
-setMsg("解錠しました。", "ok");
-playUnlockAudioOnce();
-runUnlockFxThenShowGame();
-}
-
-document.getElementById("unlockBtn").addEventListener("click", unlock);
-document.getElementById("passcode").addEventListener("keydown", (e)=>{ if(e.key==="Enter") unlock(); });
-
-document.getElementById("clearBtn").addEventListener("click", ()=>{
-  localStorage.removeItem(LS_UNLOCKED);
-  document.getElementById("passcode").value = "";
-  setMsg("", "");
-  showLock();
-});
-
-(function boot(){
-  if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
-  else showLock();
-})();
-</script>
-  <div id="unlockFx" aria-hidden="true"></div>
-</body>
-</html>
