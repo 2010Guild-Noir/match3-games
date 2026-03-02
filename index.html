@@ -1313,41 +1313,64 @@ html.ios #indexModal .vol-toggle{
     const burst = document.getElementById("burstOverlay");
     const fx = document.getElementById("unlockFx");
 
-    // start burst + whiteout
+    // 1) Put the white overlay on TOP immediately (prevents any "pop" reveal)
+    if (fx) {
+      fx.classList.remove("run","fade");
+      // force fully-white frame right now
+      fx.style.transition = "none";
+      fx.style.opacity = "1";
+      fx.style.clipPath = "circle(0% at 50% 50%)";
+      // force a paint point
+      void fx.offsetWidth;
+    }
+
+    // Restart burst (center flash) if present
     if (burst) {
       burst.classList.remove("play");
-      // restart animation
       void burst.offsetWidth;
       burst.classList.add("play");
     }
-    if (fx) {
-      fx.classList.remove("run","fade");
-      void fx.offsetWidth;
-      fx.classList.add("run");
-    }
 
-    // hold full white a bit longer (+0.5s), then fade game in while the overlay fades out
-    window.setTimeout(()=>{
-      // Start fading the game in under the whiteout
-      startGameFadeIn();
-      // Fade the whiteout out linearly over 2s (ensure style is applied before toggling)
-      if (fx) {
-        // force a reflow so the browser has a paint point at full white
-        void fx.offsetWidth;
-        requestAnimationFrame(()=>fx.classList.add("fade"));
-      }
-    }, 1560);
+    // 2) Next frame: expand from center, then keep full white for a bit, then fade the WHITE overlay out.
+    requestAnimationFrame(()=>{
+      // reveal game UNDER the white overlay (game system untouched)
+      showGame();
 
-    // cleanup overlays
-    window.setTimeout(()=>{
       if (fx) {
-        fx.classList.remove("run","fade");
-        fx.style.clipPath = "circle(0% at 50% 50%)";
+        // restore CSS-driven opacity fade (linear) for the fade-out phase
+        fx.style.transition = "";
+        // kick the center expansion animation
+        fx.classList.add("run");
       }
-      if (burst) burst.classList.remove("play");
-      window.__unlockFxRunning = false;
-    }, 4100);
+
+      // timings (ms)
+      const EXPAND_MS = 550;      // matches @keyframes unlockFlash duration
+      const HOLD_EXTRA_MS = 500;  // requested +0.5s full white hold
+      const FADE_MS = 2000;       // ~2s linear reveal (fog clears)
+
+      // Start fading the WHITE overlay out after expansion + hold
+      window.setTimeout(()=>{
+        if (fx) {
+          // ensure we are at full white BEFORE fading out
+          fx.style.clipPath = "circle(150% at 50% 50%)";
+          void fx.offsetWidth;
+          fx.classList.add("fade");
+        }
+      }, EXPAND_MS + HOLD_EXTRA_MS);
+
+      // Cleanup after fade completes
+      window.setTimeout(()=>{
+        if (fx) {
+          fx.classList.remove("run","fade");
+          fx.style.opacity = "0";
+          fx.style.clipPath = "circle(0% at 50% 50%)";
+        }
+        if (burst) burst.classList.remove("play");
+        window.__unlockFxRunning = false;
+      }, EXPAND_MS + HOLD_EXTRA_MS + FADE_MS + 120);
+    });
   }
+
 
   async function apiPost(payload){
     if (!API_URL || API_URL.includes("PASTE_YOUR")) {
