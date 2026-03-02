@@ -126,7 +126,7 @@
     /* ===== Unlock transition: center light burst -> whiteout (full overlay) -> game fade-in ===== */
     #burstOverlay{
       position:fixed; inset:0; pointer-events:none;
-      z-index:10000; opacity:0;
+      z-index:2147483645; opacity:0;
     }
     #burstOverlay.play{ opacity:1; }
     #burstOverlay::before{
@@ -151,7 +151,7 @@
     #unlockFx{
       position:fixed; inset:0; background:#fff;
       opacity:0; clip-path:circle(0% at 50% 50%);
-      pointer-events:none; z-index:10001;
+      pointer-events:none; z-index:2147483646;
       transition:opacity 2s linear;
       }
     #unlockFx.run{ opacity:1; animation:unlockFlash .55s ease-out forwards; }
@@ -1328,8 +1328,14 @@ html.ios #indexModal .vol-toggle{
 
     // hold full white a bit longer (+0.5s), then fade game in while the overlay fades out
     window.setTimeout(()=>{
+      // Start fading the game in under the whiteout
       startGameFadeIn();
-      if (fx) requestAnimationFrame(()=>fx.classList.add("fade"));
+      // Fade the whiteout out linearly over 2s (ensure style is applied before toggling)
+      if (fx) {
+        // force a reflow so the browser has a paint point at full white
+        void fx.offsetWidth;
+        requestAnimationFrame(()=>fx.classList.add("fade"));
+      }
     }, 1560);
 
     // cleanup overlays
