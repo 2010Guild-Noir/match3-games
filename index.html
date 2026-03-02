@@ -2,6 +2,17 @@
 <head>
 
 <script>
+// Supporter gate: avoid lock-screen flash on already-unlocked devices
+(function(){
+  try{
+    var k = 'supporter_unlocked_v1';
+    if (localStorage.getItem(k) === '1') document.documentElement.classList.add('supporter-unlocked');
+  }catch(_){ }
+})();
+</script>
+
+
+<script>
 /* iOS detection (single source of truth) */
 (function(){
   if (typeof window.IS_IOS === 'undefined'){
@@ -1026,6 +1037,101 @@ html.ios, html.ios body, html.ios button, html.ios input, html.ios select, html.
 /* Ensure toggle button box fits emoji/text */
 html.ios #indexModal .vol-toggle{
   min-height: 52px;
+}
+</style>
+
+
+<style id="supporter-gate-style">
+/* === Supporter Passkey Gate (UI-only; does not touch game system) === */
+#supporterLockOverlay{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.88);
+  z-index: 99990;
+}
+html:not(.supporter-unlocked) #supporterLockOverlay{ display:flex; }
+
+#supporterLockPanel{
+  width:min(92vw, 520px);
+  background: linear-gradient(180deg, rgba(20,20,25,0.96), rgba(10,10,12,0.98));
+  border: 1px solid rgba(165,57,57,0.45);
+  border-radius: 16px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.65), 0 1px 0 rgba(255,255,255,.06) inset;
+  color: #f5f7fb;
+  text-align:left;
+}
+#supporterLockPanel .desc{ margin:0 0 14px; line-height:1.75; color: rgba(245,247,251,0.92); }
+#supporterLockPanel label{ display:block; font-weight:700; margin: 8px 0 6px; }
+#supporterLockPanel .row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin: 8px 0 6px; }
+#supporterPasscode{
+  flex:1; min-width: 200px;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.55);
+  color: #eaf6ff;
+  outline:none;
+}
+#supporterPasscode::placeholder{ color: rgba(200,230,255,0.45); }
+
+#supporterMsg{ margin-top: 8px; font-size: 13px; min-height: 1.4em; }
+#supporterMsg.ok{ color:#b7ffd4; }
+#supporterMsg.err{ color:#ffb0b0; }
+
+#supporterFoot{ margin-top: 12px; font-size: 12px; color: rgba(245,247,251,0.72); line-height: 1.65; }
+
+.smallbtn{
+  display:inline-flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(180deg,#202126,#14151a);
+  color:#fff;
+  cursor:pointer;
+}
+.smallbtn:hover{ filter: brightness(1.08); }
+
+/* Unlock FX: white burst + short whiteout, then fade-in the existing game UI */
+#unlockFxOverlay{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 99995;
+}
+#unlockFxOverlay.play{ opacity: 1; }
+#unlockFxOverlay::before{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  background: radial-gradient(circle at center,
+    rgba(255,255,255,0.0) 0%,
+    rgba(255,255,255,0.0) 18%,
+    rgba(255,255,255,0.35) 28%,
+    rgba(255,255,255,0.85) 44%,
+    rgba(255,255,255,1.0) 58%,
+    rgba(255,255,255,1.0) 100%);
+  transform: scale(0.15);
+  filter: blur(2px);
+  opacity: 0;
+}
+#unlockFxOverlay.play::before{
+  animation: unlockBurst 1.05s ease-out forwards;
+}
+@keyframes unlockBurst{
+  0%   { transform:scale(0.15); opacity:0; filter:blur(2px); }
+  10%  { opacity:0.65; }
+  55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
+  100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
+}
+
+/* Fade-in the existing game UI wrapper only (no translate/size changes to avoid layout shifts) */
+html.supporter-fading-in .wrap{ opacity:0; }
+html.supporter-fading-in.supporter-fade-ready .wrap{
+  transition: opacity .55s ease-out;
+  opacity: 1;
 }
 </style>
 
@@ -6012,6 +6118,179 @@ document.addEventListener('DOMContentLoaded', function(){
     evs.forEach(e=>{ try{ window.removeEventListener(e, once, true); }catch(_){ } });
   }
   evs.forEach(e=>{ try{ window.addEventListener(e, once, true); }catch(_){ } });
+})();
+</script>
+
+
+<script id="supporter-gate-script">
+(function(){
+  'use strict';
+
+  const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
+  const LS_UNLOCKED = 'supporter_unlocked_v1';
+
+  function normalizePasscode(s){
+    return (s || '')
+      .toString()
+      .normalize('NFKC')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '');
+  }
+
+  function setMsg(text, kind){
+    const el = document.getElementById('supporterMsg');
+    if(!el) return;
+    el.textContent = text || '';
+    el.className = kind ? kind : '';
+    el.id = 'supporterMsg';
+  }
+
+  function playUnlockAudioOnce(){
+    if (window.__unlockAudioPlayed) return;
+    window.__unlockAudioPlayed = true;
+
+    const vo = document.getElementById('vo_reset');
+    const bell = document.getElementById('se_bell');
+    if (!vo || !bell) return;
+
+    try{ vo.currentTime = 0; }catch(_){ }
+    try{ bell.currentTime = 0; }catch(_){ }
+
+    // 同時に再生（ボタン押下＝ユーザー操作内で呼ぶ）
+    try{ const p1 = vo.play(); if(p1 && p1.catch) p1.catch(function(){}); }catch(_){ }
+    try{ const p2 = bell.play(); if(p2 && p2.catch) p2.catch(function(){}); }catch(_){ }
+  }
+
+  async function apiPost(payload){
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('API通信に失敗しました（HTTP ' + res.status + '）');
+    return await res.json();
+  }
+
+  function hideLockUI(){
+    document.documentElement.classList.add('supporter-unlocked');
+    const ov = document.getElementById('supporterLockOverlay');
+    if (ov) ov.style.display = 'none';
+  }
+
+  function runUnlockFx(){
+    // 1) white burst + whiteout
+    const fx = document.getElementById('unlockFxOverlay');
+    if (!fx) return;
+
+    // 2) game fade-in (opacity only, no layout changes)
+    document.documentElement.classList.add('supporter-fading-in');
+
+    // force reflow for transition to apply reliably
+    try{ void document.body.offsetHeight; }catch(_){ }
+
+    fx.classList.remove('play');
+    // restart animation
+    try{ void fx.offsetWidth; }catch(_){ }
+    fx.classList.add('play');
+
+    // When burst reaches whiteout peak (~55%), start fade-in
+    setTimeout(function(){
+      document.documentElement.classList.add('supporter-fade-ready');
+    }, 560);
+
+    // Fade-out FX overlay near the end
+    setTimeout(function(){
+      try{ fx.style.transition = 'opacity .35s ease-out'; fx.style.opacity = '0'; }catch(_){ }
+    }, 980);
+
+    // Cleanup
+    setTimeout(function(){
+      try{ fx.classList.remove('play'); fx.style.opacity='0'; }catch(_){ }
+      document.documentElement.classList.remove('supporter-fading-in');
+      document.documentElement.classList.remove('supporter-fade-ready');
+    }, 1400);
+  }
+
+  async function onUnlockClick(){
+    setMsg('', '');
+    const input = document.getElementById('supporterPasscode');
+    const raw = input ? input.value : '';
+    const pass = normalizePasscode(raw);
+
+    if (!pass){ setMsg('パスキーを入力してください。', 'err'); return; }
+
+    setMsg('照合中…', '');
+    let data;
+    try{
+      data = await apiPost({ action: 'redeem', passcode: pass });
+    }catch(e){
+      setMsg(e && e.message ? e.message : String(e), 'err');
+      return;
+    }
+
+    if (!data || !data.ok){
+      const err = (data && data.error) ? data.error : 'UNKNOWN';
+      if (err === 'NO_MATCH') setMsg('パスキーが異なります。パスキーを確認してください。', 'err');
+      else if (err === 'USED') setMsg('このパスキーは既に使用されています。別のパスキーが必要です。', 'err');
+      else if (err === 'EMPTY') setMsg('パスキーを入力してください。', 'err');
+      else setMsg('エラー: ' + err, 'err');
+      return;
+    }
+
+    try{ localStorage.setItem(LS_UNLOCKED, '1'); }catch(_){ }
+    setMsg('解錠しました。', 'ok');
+
+    // order matters: audio + fx should happen while we still have a user gesture context
+    playUnlockAudioOnce();
+
+    // Hide lock UI immediately so it never overlaps/fights layout
+    hideLockUI();
+
+    // Visual effect (does not touch game canvas or layout)
+    runUnlockFx();
+  }
+
+  function clearUnlock(){
+    try{ localStorage.removeItem(LS_UNLOCKED); }catch(_){ }
+    try{ localStorage.removeItem('supporter_unlocked_v1'); }catch(_){ }
+    // refresh to show lock again
+    location.reload();
+  }
+
+  function boot(){
+    // Already unlocked
+    let unlocked = false;
+    try{ unlocked = (localStorage.getItem(LS_UNLOCKED) === '1'); }catch(_){ }
+    if (unlocked){
+      hideLockUI();
+      return;
+    }
+
+    // Wire events
+    const btn = document.getElementById('supporterUnlockBtn');
+    if (btn) btn.addEventListener('click', onUnlockClick);
+
+    const input = document.getElementById('supporterPasscode');
+    if (input){
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') onUnlockClick();
+      });
+    }
+
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) clearBtn.addEventListener('click', clearUnlock);
+
+    // Ensure overlay is visible when locked
+    const ov = document.getElementById('supporterLockOverlay');
+    if (ov) ov.style.display = 'flex';
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 })();
 </script>
 
