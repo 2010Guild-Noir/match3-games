@@ -6325,6 +6325,10 @@ document.addEventListener('DOMContentLoaded', function(){
   window.__kickstartAllAudioInstalled = true;
 
   function apply(){
+// ロック中は絶対にBGMを開始しない
+if (document.documentElement.classList.contains("locked")) {
+  return;
+}
     try{ if (typeof window.resumeCtx==='function') window.resumeCtx(); }catch(_){}
     try{ if (typeof __applyBgmVolume==='function') __applyBgmVolume(); }catch(_){}
     try{ if (typeof __applySeVolume==='function') __applySeVolume(); }catch(_){}
