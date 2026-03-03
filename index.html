@@ -1281,65 +1281,57 @@ html.ios #indexModal .vol-toggle{
     window.__unlockFxRunning = true;
 
     const fx = document.getElementById("unlockFx");
-
-    // 1) Ensure the white overlay is on top and visible (but start transparent).
-    if (fx) {
-      fx.style.display = "block";
-      fx.style.pointerEvents = "none";
-      fx.style.transition = "none";
-      fx.style.opacity = "0";
-      // Force initial paint
-      void fx.offsetWidth;
+    if (!fx){
+      // Fallback: no FX layer, just show game
+      showGame();
+      window.__unlockFxRunning = false;
+      return;
     }
 
-    // 2) Show the game immediately (any 'pop' is covered by the overlay).
-    try { showGame(); } catch(e) {}
+    // --- Timing knobs (ms) ---
+    const FADE_TO_WHITE_MS = 600;   // white fades in
+    const WHITE_HOLD_MS   = 1000;  // full white hold
+    const FADE_OUT_MS     = 2000;  // white fades out to reveal game (linear)
 
-    // Timing (ms)
-    const whiteInMs  = 600;   // fade to white (full-screen)
-    const holdMs     = 1000;  // requested: 1s full white
-    const revealMs   = 2000;  // requested: ~2s linear reveal ("fog clears")
+    // Ensure FX is on top and starts fully transparent.
+    fx.style.display = "block";
+    fx.style.opacity = "0";
+    fx.style.transition = "none";
 
-    // 3) Fade IN to full white
+    // Force a paint with opacity 0 before starting the fade.
+    fx.offsetWidth; // reflow
+
+    // 1) Fade to white (still on lock screen underneath)
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (fx) {
-          // Commit the transparent start state before animating to white
-          fx.style.transition = "none";
-          fx.style.opacity = "0";
-          void fx.offsetWidth;
-          fx.style.transition = `opacity ${whiteInMs}ms linear`;
-          fx.style.opacity = "1";
-        }
+      fx.style.transition = `opacity ${FADE_TO_WHITE_MS}ms linear`;
+      fx.style.opacity = "1";
 
-        // 4) Hold full white, then reveal the game by fading the white OUT
+      // 2) When screen is fully white, switch to the game underneath (hidden by white)
+      setTimeout(() => {
+        fx.style.transition = "none";
+        fx.style.opacity = "1";
+
+        // Switch screens WHILE fully white (prevents any "game peek" flash)
+        showGame();
+
+        // 3) Hold pure white, then fade it out to reveal the game smoothly
         setTimeout(() => {
-          if (!fx) {
-            window.__unlockFxRunning = false;
-            return;
-          }
-
-          // Commit the fully-white state before starting the reveal fade.
-          fx.style.transition = "none";
-          fx.style.opacity = "1";
-          void fx.offsetWidth;
-
+          // Start fade-out on a fresh frame so transition always fires.
           requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              fx.style.transition = `opacity ${revealMs}ms linear`;
-              fx.style.opacity = "0";
+            fx.style.transition = `opacity ${FADE_OUT_MS}ms linear`;
+            fx.style.opacity = "0";
 
-              setTimeout(() => {
-                fx.style.display = "none";
-                window.__unlockFxRunning = false;
-              }, revealMs + 40);
-            });
+            // Cleanup
+            setTimeout(() => {
+              fx.style.display = "none";
+              window.__unlockFxRunning = false;
+            }, FADE_OUT_MS);
           });
+        }, WHITE_HOLD_MS);
 
-        }, whiteInMs + holdMs);
-      });
+      }, FADE_TO_WHITE_MS);
     });
-}
+  }
 
 
   async function apiPost(payload){
