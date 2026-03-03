@@ -6337,6 +6337,14 @@ document.addEventListener('DOMContentLoaded', function(){
 
   const evs = ['pointerdown','touchstart','mousedown','keydown','click'];
   function once(){
+    // PASSKEY画面(locked)ではBGMを開始しない。解錠後の「最初のタッチ」で開始する。
+    try{
+      if (document.documentElement.classList.contains('locked')) return;
+      // さらに安全側：未解錠なら何もしない（クリック等で誤起動しない）
+      if (typeof LS_UNLOCKED !== 'undefined'){
+        try{ if (localStorage.getItem(LS_UNLOCKED) !== "1") return; }catch(_e){}
+      }
+    }catch(_){}
     apply();
     setTimeout(apply, 120);
     setTimeout(apply, 480);
