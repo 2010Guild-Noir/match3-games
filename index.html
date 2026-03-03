@@ -1306,7 +1306,7 @@ html.ios #indexModal .vol-toggle{
     try{ bell.play(); }catch(_e){}
   }
 
-  function runUnlockFxThenShowGame() {
+function runUnlockFxThenShowGame() {
 
   const fx = document.getElementById("unlockFx");
 
@@ -1315,21 +1315,21 @@ html.ios #indexModal .vol-toggle{
   fx.style.opacity = "1";
   fx.style.transition = "none";
 
-  // ゲームはこの時点で表示（パッと切り替わっても白で隠れる）
+  // ゲームをこの時点で表示（白で隠れる）
   showGame();
 
   // 白保持 0.5秒
   setTimeout(() => {
 
-    // 1フレーム固定
+    // 1フレーム固定させる（確実に描画させる）
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
 
-        // ここで初めてフェード開始
+        // フェード開始（2秒 linear）
         fx.style.transition = "opacity 2s linear";
         fx.style.opacity = "0";
 
-        // 完全に透明になったら消す
+        // フェード完了後に非表示
         setTimeout(() => {
           fx.style.display = "none";
         }, 2000);
