@@ -1292,7 +1292,7 @@ html.ios #indexModal .vol-toggle{
 
     // --- Timing knobs (ms) ---
     const FADE_TO_WHITE_MS = 600;   // white fades in
-    const WHITE_HOLD_MS   = 1000;  // full white hold
+    const WHITE_HOLD_MS   = 2000;  // full white hold
     const FADE_OUT_MS     = 2000;  // white fades out to reveal game (linear)
 
     // Ensure FX is on top and starts fully transparent.
@@ -2519,13 +2519,13 @@ const CHARACTERS = [
   { sym: "S_NE0", name: "ネオレトロ", tag: "修羅王丸", desc: "人の姿を辞めた修羅王丸。/ 縦列＋両隣消去。", image: "S_NE0", unlock: { key: "rank", value: 1 } },
   { sym: "S_SHU", name: "シンギュラ", tag: "修羅王丸", desc: "ネオレトロを斬り捨て顕現した存在。/ 周囲を菱形に消去。", image: "S_SHU", unlock: { key: "rank", value: 2 } },
   { sym: "S_REQ", name: "レクイエム", tag: "修羅王丸", desc: "新たな境地を求めて生まれた存在。/ 横列+上下隣消去。", image: "S_REQ", unlock: { key: "rank", value: 3 } },
-  { sym: "S_UNK", name: "アンノウン", tag: "修羅王丸", desc: "未だ見ぬ先の境地。/ 斜め✕列消去。", image: "S_UNK", unlock: { key: "rank", value: 4 } },
+  { sym: "S_UNK", name: "アンノウン", tag: "修羅王丸", desc: "未だ見ぬ先の 陽炎の境地。/ 斜め✕列消去。", image: "S_UNK", unlock: { key: "rank", value: 4 } },
 
   { sym: "SHURACHAN", name: "しゅらちゃん", tag: "似絵", desc: "シンギュラの自画像。/ 同種駒を4つ消去で召喚。十字列消去。", image: "SHURACHAN", unlock: { key: "spawn", value: "SHURACHAN" } },
   { sym: "REKUSHURA", name: "レクしゅら", tag: "似絵", desc: "レクイエムの自画像。/ 同種駒を5つ以上消去で召喚。選択した駒を全て消去。", image: "REKUSHURA", unlock: { key: "spawn", value: "REKUSHURA" } },
 
   { sym: "J_NEM", name: "合歓", tag: "悔恨", desc: "修羅王丸を恨む娘。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:1", image: "J_NEM", unlock: { key: "juso_spawn", value: true } },
-  { sym: "J_SHI", name: "辰十郎", tag: "慙愧", desc: "筑前忍八剣衆の前元締。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:3", image: "J_SHI", unlock: { key: "juso_spawn", value: true } },
+  { sym: "J_SHI", name: "辰十郎", tag: "慙愧", desc: "筑前忍八剣衆の先代元締。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:3", image: "J_SHI", unlock: { key: "juso_spawn", value: true } },
   { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む絶対秩序の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
 
 ];
