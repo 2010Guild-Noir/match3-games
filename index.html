@@ -7,7 +7,7 @@
     html.ready{ visibility:visible; }
 
     /* Locked: hide everything except our lock/fx/debug UI */
-    html.locked body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+    html.locked body > *:not(#lock):not(#unlockFx):not(#clearBtnWrap){
       opacity:0 !important;
       visibility:hidden !important;
       pointer-events:none !important;
@@ -20,14 +20,14 @@
 
     /* ===== Game reveal fade-in (no layout changes; opacity only) ===== */
     /* Step 1: prep state forces opacity to 0 instantly (NO transition) */
-    html.game-prep body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+    html.game-prep body > *:not(#lock):not(#unlockFx):not(#clearBtnWrap){
       opacity:0 !important;
       visibility:visible !important;
       pointer-events:auto !important;
       transition:none !important;
     }
     /* Step 2: fade state transitions opacity 0 -> 1 linearly over ~2s */
-    html.game-fade body > *:not(#lock):not(#unlockFx):not(#burstOverlay):not(#clearBtnWrap){
+    html.game-fade body > *:not(#lock):not(#unlockFx):not(#clearBtnWrap){
       opacity:1 !important;
       visibility:visible !important;
       pointer-events:auto !important;
@@ -124,22 +124,6 @@
     #clearBtnWrap .smallbtn:hover{ background:#2a2a3a; }
 
     /* ===== Unlock transition: center light burst -> whiteout (full overlay) -> game fade-in ===== */
-    #burstOverlay{
-      position:fixed; inset:0; pointer-events:none;
-      z-index:2147483645; opacity:0;
-    }
-    #burstOverlay.play{ opacity:1; }
-    #burstOverlay::before{
-      content:"";
-      position:absolute; inset:0;
-      background:#fff;
-      transform:scale(0);
-      transform-origin:50% 50%;
-      opacity:1;
-      animation: burstWhite .55s ease-out forwards;
-    }
-    @keyframes burstWhite{
-      from{ transform:scale(0); }
       to  { transform:scale(1); }
     }
 
@@ -149,15 +133,13 @@
     }
 
     #unlockFx{
-      position:fixed; inset:0; background:#fff;
-      opacity:0; clip-path:circle(0% at 50% 50%);
-      pointer-events:none; z-index:2147483646;
-      transition:opacity 2s linear;
-      }
-    #unlockFx.run{ opacity:1; animation:unlockFlash .55s ease-out forwards; }
-    #unlockFx.fade{ opacity:0; }
-    @keyframes unlockFlash{
-      from{ clip-path:circle(0% at 50% 50%); }
+      position:fixed; inset:0;
+      background:#fff;
+      opacity:0;
+      display:none;
+      pointer-events:none;
+      z-index:2147483646;
+    }
       to  { clip-path:circle(150% at 50% 50%); }
     }
   </style>
@@ -1237,8 +1219,6 @@ html.ios #indexModal .vol-toggle{
   <div id="clearBtnWrap">
     <button class="smallbtn" id="clearBtn">この端末の解錠を解除</button>
   </div>
-
-  <div id="burstOverlay" aria-hidden="true"></div>
   <div id="unlockFx" aria-hidden="true"></div>
 
   <script>
@@ -1310,68 +1290,59 @@ html.ios #indexModal .vol-toggle{
     if (window.__unlockFxRunning) return;
     window.__unlockFxRunning = true;
 
-    const burst = document.getElementById("burstOverlay");
     const fx = document.getElementById("unlockFx");
 
-    // Ensure game can switch immediately; any "pop" stays hidden under the white overlay.
-    // NOTE: This does NOT touch the game system itself—only the overlay layer.
+    // 1) Ensure the white overlay is on top and visible (but start transparent).
     if (fx) {
       fx.style.display = "block";
       fx.style.pointerEvents = "none";
       fx.style.transition = "none";
-      fx.style.opacity = "1";
-      fx.style.clipPath = "circle(0% at 50% 50%)";
-      // Force a paint so the initial state is actually drawn
+      fx.style.opacity = "0";
+      // Force initial paint
       void fx.offsetWidth;
     }
 
-    // Show the game immediately (still hidden by the overlay)
+    // 2) Show the game immediately (any 'pop' is covered by the overlay).
     try { showGame(); } catch(e) {}
 
-    // Optional center burst (full-screen white, no vignette)
-    if (burst) {
-      burst.classList.remove("play");
-      void burst.offsetWidth;
-      burst.classList.add("play");
-    }
+    // Timing (ms)
+    const whiteInMs  = 300;   // fade to white (full-screen)
+    const holdMs     = 1000;  // requested: 1s full white
+    const revealMs   = 2000;  // requested: ~2s linear reveal ("fog clears")
 
-    // Stage 1: expand white from center -> full white (reliable via rAF x2)
-    const expandMs = 550;          // matches burstWhite animation length
-    const holdWhiteMs = 500;       // requested: keep the pure white screen +0.5s before fade-in
-    const fadeMs = 2000;           // requested: ~2s linear fade
-
+    // 3) Fade IN to full white
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (fx) {
-          fx.style.transition = `clip-path ${expandMs}ms ease-out`;
-          fx.style.clipPath = "circle(150% at 50% 50%)";
+          fx.style.transition = `opacity ${whiteInMs}ms linear`;
+          fx.style.opacity = "1";
         }
 
-        // Stage 2: hold the fully white frame a bit longer
+        // 4) Hold full white, then reveal the game by fading the white OUT
         setTimeout(() => {
-          // Stage 3: fade the white overlay OUT (this reveals the game smoothly)
-          if (fx) {
-            // Force the "fully white" state to be committed before fading
-            fx.style.transition = "none";
-            fx.style.opacity = "1";
-            void fx.offsetWidth;
-
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                fx.style.transition = `opacity ${fadeMs}ms linear`;
-                fx.style.opacity = "0";
-
-                setTimeout(() => {
-                  fx.style.display = "none";
-                  window.__unlockFxRunning = false;
-                }, fadeMs + 30);
-              });
-            });
-
-          } else {
+          if (!fx) {
             window.__unlockFxRunning = false;
+            return;
           }
-        }, expandMs + holdWhiteMs);
+
+          // Commit the fully-white state before starting the reveal fade.
+          fx.style.transition = "none";
+          fx.style.opacity = "1";
+          void fx.offsetWidth;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              fx.style.transition = `opacity ${revealMs}ms linear`;
+              fx.style.opacity = "0";
+
+              setTimeout(() => {
+                fx.style.display = "none";
+                window.__unlockFxRunning = false;
+              }, revealMs + 40);
+            });
+          });
+
+        }, whiteInMs + holdMs);
       });
     });
 }
