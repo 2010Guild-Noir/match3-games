@@ -1268,7 +1268,7 @@ html.ios #indexModal .vol-toggle{
     if (window.__unlockAudioPlayed) return;
     window.__unlockAudioPlayed = true;
     const vo = document.getElementById("vo_reset");
-    const bell = document.getElementById("se_bell");
+    const bell = document.getElementById("se_shine");
     if (!vo || !bell) return;
     try{ vo.currentTime = 0; }catch(_e){}
     try{ bell.currentTime = 0; }catch(_e){}
@@ -2520,7 +2520,7 @@ const CHARACTERS = [
 
   { sym: "J_NEM", name: "合歓", tag: "悔恨", desc: "修羅王丸を恨む娘。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:1", image: "J_NEM", unlock: { key: "juso_spawn", value: true } },
   { sym: "J_SHI", name: "辰十郎", tag: "慙愧", desc: "筑前忍八剣衆の前元締。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:3", image: "J_SHI", unlock: { key: "juso_spawn", value: true } },
-  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む正義の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
+  { sym: "J_PRO", name: "プロパガンダ", tag: "脅威", desc: "平行世界に住む絶対秩序の修羅王丸。/ 駒移動できず、隣接する消去でHPを削る。呪詛HP:5", image: "J_PRO", unlock: { key: "juso_spawn", value: true } },
 
 ];
 let unlockedChars = store.get("unlockedChars", { initial: true, juso_spawn: false, SHURACHAN: false, REKUSHURA: false });
@@ -2807,7 +2807,7 @@ const MAX_RANK_INDEX = RANKS.length - 1;
 const NORMALS=["SANZU","MUTSU","HANZO","CHIEKO","KUJAKU"];
 const SPECIALS=RANKS.map(r=>r.key);
 const JUSOS=["J_NEM", "J_SHI", "J_PRO"];
-const RANK_THRESH = [5, 10, 10, 10, 10];//ランクアップ闘値
+const RANK_THRESH = [20, 100, 300, 500, 700];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 10, "S_NE0": 20, "S_SHU": 30, "S_REQ": 40, "S_UNK": 50 };
 
 let board=[], yAnim=[], score=store.get("score",0), rankIndex=store.get("rankIndex",0), rankProgress=store.get("rankProgress",0);
@@ -6047,7 +6047,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 10; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 800; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
