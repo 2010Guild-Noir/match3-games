@@ -123,15 +123,7 @@
     }
     #clearBtnWrap .smallbtn:hover{ background:#2a2a3a; }
 
-    /* ===== Unlock transition: center light burst -> whiteout (full overlay) -> game fade-in ===== */
-      to  { transform:scale(1); }
-    }
-
-      10%  { opacity:0.65; }
-      55%  { transform:scale(1.05); opacity:1; filter:blur(1px); }
-      100% { transform:scale(1.35); opacity:1; filter:blur(0px); }
-    }
-
+    /* ===== Unlock FX overlay (full-screen white only) ===== */
     #unlockFx{
       position:fixed; inset:0;
       background:#fff;
@@ -140,9 +132,7 @@
       pointer-events:none;
       z-index:2147483646;
     }
-      to  { clip-path:circle(150% at 50% 50%); }
-    }
-  </style>
+</style>
   <script>
   (function(){
     try{
@@ -1306,7 +1296,7 @@ html.ios #indexModal .vol-toggle{
     try { showGame(); } catch(e) {}
 
     // Timing (ms)
-    const whiteInMs  = 300;   // fade to white (full-screen)
+    const whiteInMs  = 600;   // fade to white (full-screen)
     const holdMs     = 1000;  // requested: 1s full white
     const revealMs   = 2000;  // requested: ~2s linear reveal ("fog clears")
 
@@ -1314,6 +1304,10 @@ html.ios #indexModal .vol-toggle{
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (fx) {
+          // Commit the transparent start state before animating to white
+          fx.style.transition = "none";
+          fx.style.opacity = "0";
+          void fx.offsetWidth;
           fx.style.transition = `opacity ${whiteInMs}ms linear`;
           fx.style.opacity = "1";
         }
