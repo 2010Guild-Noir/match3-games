@@ -1228,6 +1228,7 @@ html.ios #indexModal .vol-toggle{
 
   function showGame(){
     document.documentElement.classList.remove("locked");
+    window.__PASSKEY_LOCKED = false;
     document.getElementById("lock")?.classList.add("hide");
     const cbw = document.getElementById("clearBtnWrap");
     if (cbw) cbw.style.display = "block";
@@ -1259,6 +1260,7 @@ html.ios #indexModal .vol-toggle{
 
   function showLock(){
     document.documentElement.classList.add("locked");
+    window.__PASSKEY_LOCKED = true;
     document.getElementById("lock")?.classList.remove("hide");
     const cbw = document.getElementById("clearBtnWrap");
     if (cbw) cbw.style.display = "none";
@@ -1390,6 +1392,7 @@ html.ios #indexModal .vol-toggle{
   });
 
   (function boot(){
+    window.__PASSKEY_LOCKED = true;
     try{
       if (localStorage.getItem(LS_UNLOCKED) === "1") showGame();
       else showLock();
@@ -1663,7 +1666,7 @@ bgmOn = vol > 0;
 
   updateBgmIcon(vol);
 
-  if (bgmOn){
+  if (bgmOn && !document.documentElement.classList.contains("locked") && !window.__PASSKEY_LOCKED){
     try{ safeStartBGM(currentBGM()); }catch(_){}
   } else {
     // 0の場合は停止せずミュートのみ（iOS/Chromeの再開不安定を回避）
@@ -2312,7 +2315,10 @@ function userGesture(){
   try{
     const base = store.get("bgmVol", BGM_DEFAULT_VOL);
     if (!bgmMuted && base > 0){
-      safeStartBGM(currentBGM());
+      // ロック中はBGMを開始しない（パスキー画面は静寂）
+      if (!document.documentElement.classList.contains("locked") && !window.__PASSKEY_LOCKED){
+        safeStartBGM(currentBGM());
+      }
     }
   }catch(_){}
 }
@@ -6325,10 +6331,8 @@ document.addEventListener('DOMContentLoaded', function(){
   window.__kickstartAllAudioInstalled = true;
 
   function apply(){
-// ロック中は絶対にBGMを開始しない
-if (document.documentElement.classList.contains("locked")) {
-  return;
-}
+    // ロック中はBGMを開始しない（パスキー画面は静寂）
+    if (document.documentElement.classList.contains("locked") || window.__PASSKEY_LOCKED) return;
     try{ if (typeof window.resumeCtx==='function') window.resumeCtx(); }catch(_){}
     try{ if (typeof __applyBgmVolume==='function') __applyBgmVolume(); }catch(_){}
     try{ if (typeof __applySeVolume==='function') __applySeVolume(); }catch(_){}
@@ -6341,14 +6345,6 @@ if (document.documentElement.classList.contains("locked")) {
 
   const evs = ['pointerdown','touchstart','mousedown','keydown','click'];
   function once(){
-    // PASSKEY画面(locked)ではBGMを開始しない。解錠後の「最初のタッチ」で開始する。
-    try{
-      if (document.documentElement.classList.contains('locked')) return;
-      // さらに安全側：未解錠なら何もしない（クリック等で誤起動しない）
-      if (typeof LS_UNLOCKED !== 'undefined'){
-        try{ if (localStorage.getItem(LS_UNLOCKED) !== "1") return; }catch(_e){}
-      }
-    }catch(_){}
     apply();
     setTimeout(apply, 120);
     setTimeout(apply, 480);
