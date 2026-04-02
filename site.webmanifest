@@ -3,12 +3,12 @@
   "short_name": "焦土パズル",
   "icons": [
     {
-      "src": "/images/favicon-192.png",
+      "src": "/match3-games/images/favicon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/images/favicon-512.png",
+      "src": "/match3-games/images/favicon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
