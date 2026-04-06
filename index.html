@@ -1308,7 +1308,7 @@ html.ios #indexModal .vol-toggle{
         fx.style.opacity = "1";
 
         // Switch screens WHILE fully white (prevents any "game peek" flash)
-        showGame();
+        startGameFadeIn();
 
         // 3) Hold pure white, then fade it out to reveal the game smoothly
         setTimeout(() => {
@@ -1505,7 +1505,7 @@ window.store = window.store || {
 <div id="resetConfirmModal" role="dialog" aria-modal="true" aria-label="覚醒ランクのリセット確認" hidden>
   <div class="modal-content">
     <h3>覚醒ランクをリセットしますか？</h3>
-    <p>これまでの覚醒ランクと暗躍値が初期化されます。</p>
+    <p>これまでの覚醒ランクと暗躍値/称号が初期化されます。</p>
     <div class="confirm-btns">
       <button class="btn" id="confirmResetNo" onclick="closeResetConfirmModal(); onClickSE()">いいえ</button>
       <button class="btn btn-reset" id="confirmResetYes" onclick="resetRank(); onClickSE()">はい</button>
