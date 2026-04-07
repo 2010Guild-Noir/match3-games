@@ -1195,8 +1195,6 @@ html.ios #indexModal .vol-toggle{
         <button id="unlockBtn" class="btn-reset">焦土の門を開く</button>
       </div>
 
-<div id="unlockFx" aria-hidden="true"></div>
-
       <div id="msg" class="msg"></div>
 
       <div class="foot">
@@ -1286,50 +1284,50 @@ html.ios #indexModal .vol-toggle{
       return;
     }
 
-    // --- Timing knobs (ms) ---
-    const FADE_TO_WHITE_MS = 600;   // white fades in
-    const WHITE_HOLD_MS   = 2000;  // full white hold
-    const FADE_OUT_MS     = 2000;  // white fades out to reveal game (linear)
+ // =========================
+  // ① 白フェードイン（ゆっくり）
+  // =========================
+  fx.style.display = "block";
+  fx.style.opacity = "0";
+  fx.style.transition = "none";
 
-    // Ensure FX is on top and starts fully transparent.
-    fx.style.display = "block";
-    fx.style.opacity = "0";
-    fx.style.transition = "none";
-
-    // Force a paint with opacity 0 before starting the fade.
-    fx.offsetWidth; // reflow
-
-    // 1) Fade to white (still on lock screen underneath)
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      fx.style.transition = `opacity ${FADE_TO_WHITE_MS}ms linear`;
+      fx.style.transition = "opacity 0.6s ease";
       fx.style.opacity = "1";
 
-      // 2) When screen is fully white, switch to the game underneath (hidden by white)
+      // =========================
+      // ② 白の中でゲームを準備
+      // =========================
       setTimeout(() => {
-        fx.style.transition = "none";
-        fx.style.opacity = "1";
 
-        // Switch screens WHILE fully white (prevents any "game peek" flash)
-        startGameFadeIn();
+        document.documentElement.classList.add("game-prep");
 
-        // 3) Hold pure white, then fade it out to reveal the game smoothly
-        setTimeout(() => {
-          // Start fade-out on a fresh frame so transition always fires.
-          requestAnimationFrame(() => {
-            fx.style.transition = `opacity ${FADE_OUT_MS}ms linear`;
+        requestAnimationFrame(() => {
+          document.documentElement.classList.add("game-fade");
+
+          // =========================
+          // ③ 少し待ってから白を消す
+          // =========================
+          setTimeout(() => {
+
+            fx.style.transition = "opacity 1.2s ease";
             fx.style.opacity = "0";
 
-            // Cleanup
             setTimeout(() => {
               fx.style.display = "none";
               window.__unlockFxRunning = false;
-            }, FADE_OUT_MS);
-          });
-        }, WHITE_HOLD_MS);
+            }, 1200);
 
-      }, FADE_TO_WHITE_MS);
+          }, 500); // ←ここが「霧の中で世界が立ち上がる時間」
+
+        });
+
+      }, 800); // ←白が満ちる時間
+
     });
-  }
+  });
+}
 
 
   async function apiPost(payload){
@@ -1507,7 +1505,7 @@ window.store = window.store || {
 <div id="resetConfirmModal" role="dialog" aria-modal="true" aria-label="覚醒ランクのリセット確認" hidden>
   <div class="modal-content">
     <h3>覚醒ランクをリセットしますか？</h3>
-    <p>これまでの覚醒ランクと暗躍値/称号が初期化されます。</p>
+    <p>これまでの覚醒ランクと暗躍値が初期化されます。</p>
     <div class="confirm-btns">
       <button class="btn" id="confirmResetNo" onclick="closeResetConfirmModal(); onClickSE()">いいえ</button>
       <button class="btn btn-reset" id="confirmResetYes" onclick="resetRank(); onClickSE()">はい</button>
