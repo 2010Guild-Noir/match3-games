@@ -496,28 +496,30 @@ details.help li {
 
 /* 覚醒リセットボタン：インデックス枠内の左上に小型配置 + 長押しゲージ */
 #indexModal .index-panel{
-  padding:56px 25px 25px;
+  padding:60px 25px 25px;
 }
 #indexModal #resetRankBtn{
   position:absolute;
-  top:10px;
-  left:15px;
+  top:8px;
+  left:12px;
   z-index:1000;
 
-  display:inline-block;
-  width:36px;
-  height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  height:48px;
 
-  background:transparent url("images/resetbutton.png") center/contain no-repeat;
+  background:transparent url("images/resetbutton.png") center/36px 36px no-repeat;
   border:none;
   padding:0;
   margin:0;
   box-shadow:none;
-  border-radius:0;
+  border-radius:12px;
 
   color:transparent;
   text-indent:-9999px;
-  overflow:hidden;
+  overflow:visible;
   cursor:pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -537,7 +539,7 @@ details.help li {
 }
 #indexModal .reset-hold-ring{
   position:absolute;
-  inset:-4px;
+  inset:0;
   pointer-events:none;
   opacity:0;
   transition:opacity .15s ease;
@@ -547,8 +549,8 @@ details.help li {
 }
 #indexModal .reset-hold-ring svg{
   display:block;
-  width:44px;
-  height:44px;
+  width:48px;
+  height:48px;
   overflow:visible;
 }
 #indexModal .reset-hold-ring .reset-hold-track{
