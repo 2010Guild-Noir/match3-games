@@ -1202,11 +1202,11 @@ html.ios #indexModal .vol-toggle{
         ※解錠後はブラウザの履歴削除をしないようご注意ください。<br/><br/>
         Ⓒ2010 Guild Noir. 修羅王丸®
       </div>
-    </div>
-  </div>
+    </div>  </div>
+  <div id="unlockFx" aria-hidden="true"></div>
 
   <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
   const LS_UNLOCKED = "supporter_unlocked_v1";
 
   function normalizePasscode(s){
@@ -1272,61 +1272,61 @@ html.ios #indexModal .vol-toggle{
     try{ bell.play(); }catch(_e){}
   }
 
-function runUnlockFxThenShowGame(){
-  if (window.__unlockFxRunning) return;
-  window.__unlockFxRunning = true;
+  function runUnlockFxThenShowGame(){
+    if (window.__unlockFxRunning) return;
+    window.__unlockFxRunning = true;
 
-  const fx = document.getElementById("unlockFx");
-  if (!fx){
-    // Fallback: no FX layer, just show game
-    showGame();
-    window.__unlockFxRunning = false;
-    return;
-  }
+    const fx = document.getElementById("unlockFx");
+    if (!fx){
+      // Fallback: no FX layer, just show game
+      showGame();
+      window.__unlockFxRunning = false;
+      return;
+    }
 
-  // --- Timing knobs (ms) ---
-  const FADE_TO_WHITE_MS = 600;  // 白がじわっとフェードイン
-  const WHITE_HOLD_MS    = 2000; // 真っ白を維持
-  const FADE_OUT_MS      = 2000; // 白がゆっくり晴れる
+    // --- Timing knobs (ms) ---
+    const FADE_TO_WHITE_MS = 600;  // 白がじわっとフェードイン
+    const WHITE_HOLD_MS    = 2000; // 真っ白を維持
+    const FADE_OUT_MS      = 2000; // 白がゆっくり晴れる
 
-  // 初期状態
-  fx.style.display = "block";
-  fx.style.opacity = "0";
-  fx.style.transition = "none";
+    // 初期状態
+    fx.style.display = "block";
+    fx.style.opacity = "0";
+    fx.style.transition = "none";
 
-  // 0 の状態を確実に描画させる
-  fx.offsetWidth;
+    // 0 の状態を確実に描画させる
+    fx.offsetWidth;
 
-  // 1) パスキー画面の上から白をフェードイン
-  requestAnimationFrame(() => {
-    fx.style.transition = `opacity ${FADE_TO_WHITE_MS}ms linear`;
-    fx.style.opacity = "1";
-
-    // 2) 真っ白になったら、その裏でゲーム全体をフェードイン開始
-    setTimeout(() => {
-      fx.style.transition = "none";
+    // 1) パスキー画面の上から白をフェードイン
+    requestAnimationFrame(() => {
+      fx.style.transition = `opacity ${FADE_TO_WHITE_MS}ms linear`;
       fx.style.opacity = "1";
 
-      // 白の裏でゲームを立ち上げる
-      startGameFadeIn();
-
-      // 3) 白を維持したあと、白をフェードアウトしてゲームを見せる
+      // 2) 真っ白になったら、その裏でゲーム全体をフェードイン開始
       setTimeout(() => {
-        requestAnimationFrame(() => {
-          fx.style.transition = `opacity ${FADE_OUT_MS}ms linear`;
-          fx.style.opacity = "0";
+        fx.style.transition = "none";
+        fx.style.opacity = "1";
 
-          // 後始末
-          setTimeout(() => {
-            fx.style.display = "none";
-            window.__unlockFxRunning = false;
-          }, FADE_OUT_MS);
-        });
-      }, WHITE_HOLD_MS);
+        // 白の裏でゲームを立ち上げる
+        startGameFadeIn();
 
-    }, FADE_TO_WHITE_MS);
-  });
-}
+        // 3) 白を維持したあと、白をフェードアウトしてゲームを見せる
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            fx.style.transition = `opacity ${FADE_OUT_MS}ms linear`;
+            fx.style.opacity = "0";
+
+            // 後始末
+            setTimeout(() => {
+              fx.style.display = "none";
+              window.__unlockFxRunning = false;
+            }, FADE_OUT_MS);
+          });
+        }, WHITE_HOLD_MS);
+
+      }, FADE_TO_WHITE_MS);
+    });
+  }
 
 
   async function apiPost(payload){
@@ -1504,7 +1504,7 @@ window.store = window.store || {
 <div id="resetConfirmModal" role="dialog" aria-modal="true" aria-label="覚醒ランクのリセット確認" hidden>
   <div class="modal-content">
     <h3>覚醒ランクをリセットしますか？</h3>
-    <p>これまでの覚醒ランクと暗躍値が初期化されます。</p>
+    <p>これまでの覚醒ランクと暗躍値/称号が初期化されます。</p>
     <div class="confirm-btns">
       <button class="btn" id="confirmResetNo" onclick="closeResetConfirmModal(); onClickSE()">いいえ</button>
       <button class="btn btn-reset" id="confirmResetYes" onclick="resetRank(); onClickSE()">はい</button>
