@@ -1272,62 +1272,61 @@ html.ios #indexModal .vol-toggle{
     try{ bell.play(); }catch(_e){}
   }
 
-  function runUnlockFxThenShowGame(){
-    if (window.__unlockFxRunning) return;
-    window.__unlockFxRunning = true;
+function runUnlockFxThenShowGame(){
+  if (window.__unlockFxRunning) return;
+  window.__unlockFxRunning = true;
 
-    const fx = document.getElementById("unlockFx");
-    if (!fx){
-      // Fallback: no FX layer, just show game
-      showGame();
-      window.__unlockFxRunning = false;
-      return;
-    }
+  const fx = document.getElementById("unlockFx");
+  if (!fx){
+    // Fallback: no FX layer, just show game
+    showGame();
+    window.__unlockFxRunning = false;
+    return;
+  }
 
- // =========================
-  // ① 白フェードイン（ゆっくり）
-  // =========================
+  // --- Timing knobs (ms) ---
+  const FADE_TO_WHITE_MS = 600;  // 白がじわっとフェードイン
+  const WHITE_HOLD_MS    = 2000; // 真っ白を維持
+  const FADE_OUT_MS      = 2000; // 白がゆっくり晴れる
+
+  // 初期状態
   fx.style.display = "block";
   fx.style.opacity = "0";
   fx.style.transition = "none";
 
+  // 0 の状態を確実に描画させる
+  fx.offsetWidth;
+
+  // 1) パスキー画面の上から白をフェードイン
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      fx.style.transition = "opacity 0.6s ease";
+    fx.style.transition = `opacity ${FADE_TO_WHITE_MS}ms linear`;
+    fx.style.opacity = "1";
+
+    // 2) 真っ白になったら、その裏でゲーム全体をフェードイン開始
+    setTimeout(() => {
+      fx.style.transition = "none";
       fx.style.opacity = "1";
 
-      // =========================
-      // ② 白の中でゲームを準備
-      // =========================
+      // 白の裏でゲームを立ち上げる
+      startGameFadeIn();
+
+      // 3) 白を維持したあと、白をフェードアウトしてゲームを見せる
       setTimeout(() => {
-
-        document.documentElement.classList.add("game-prep");
-
         requestAnimationFrame(() => {
-          document.documentElement.classList.add("game-fade");
+          fx.style.transition = `opacity ${FADE_OUT_MS}ms linear`;
+          fx.style.opacity = "0";
 
-          // =========================
-          // ③ 少し待ってから白を消す
-          // =========================
+          // 後始末
           setTimeout(() => {
-
-            fx.style.transition = "opacity 1.2s ease";
-            fx.style.opacity = "0";
-
-            setTimeout(() => {
-              fx.style.display = "none";
-              window.__unlockFxRunning = false;
-            }, 1200);
-
-          }, 500); // ←ここが「霧の中で世界が立ち上がる時間」
-
+            fx.style.display = "none";
+            window.__unlockFxRunning = false;
+          }, FADE_OUT_MS);
         });
+      }, WHITE_HOLD_MS);
 
-      }, 800); // ←白が満ちる時間
-
-    });
+    }, FADE_TO_WHITE_MS);
   });
-}
+}}
 
 
   async function apiPost(payload){
