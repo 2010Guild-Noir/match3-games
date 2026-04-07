@@ -344,9 +344,9 @@ canvas{ display:block; margin:18px auto; width:min(96vw, 480px); height:auto; as
   /* モーダル共通スタイル（図鑑用をベースに調整） */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
   .modal-overlay.open { display: flex; }
-  /* ★インデックスの上に重ねて表示するため、図鑑と操作説明のZ-indexを上げる */
+  /* ★記録帖の上に重ねて表示するため、図鑑と操作説明のZ-indexを上げる */
   /* Z-index: 10010 (indexModal) < 10012 (charModal, howtoModal) */
-  /* ★修正: .openクラスがなくてもz-indexを適用し、インデックスモーダルより前面に表示されるようにする */
+  /* ★修正: .openクラスがなくてもz-indexを適用し、記録帖モーダルより前面に表示されるようにする */
   #charModal { z-index: 20000; } 
   #howtoModal { z-index: 20000; }
   
@@ -437,8 +437,8 @@ details.help li {
   text-align: left;
 }
 
-/* === インデックスボタン＋モーダル  === */
-/* 右上に固定するボタン（インデックス） */
+/* === 記録帖ボタン＋モーダル  === */
+/* 右上に固定するボタン（記録帖） */
 #indexBtn{
   position:fixed;top:10px;right:10px;width:40px;height:40px;
   display:inline-grid;place-items:center;border-radius:10px;border:1px solid var(--line);
@@ -462,7 +462,7 @@ details.help li {
   position:relative;padding:25px;text-align:center;
 }
 #indexModal .index-panel h2{margin:0 0 20px; font-size:24px;}
-/* インデックス内のボタンリスト */
+/* 記録帖内のボタンリスト */
 #indexModal .btn-list{display:grid; gap:12px;}
 #indexModal .btn-list .btn{ 
   width:100%; justify-content:center; 
@@ -494,7 +494,7 @@ details.help li {
 }
 #indexModal .btn-group .btn{ flex:1; padding:10px 12px; font-size:15px; }
 
-/* 覚醒リセットボタン：インデックス枠内の左上に小型配置 + 長押しゲージ */
+/* 覚醒リセットボタン：記録帖枠内の左上に小型配置 + 長押しゲージ */
 #indexModal .index-panel{
   padding:60px 25px 25px;
 }
@@ -1542,11 +1542,11 @@ window.store = window.store || {
 <audio id="vo_combo5" src="audio/vo_combo5.mp3" preload="auto"></audio>
 <audio id="vo_comboX" src="audio/vo_comboX.mp3" preload="auto"></audio>
 
-<button id="indexBtn" title="インデックス" aria-label="インデックス"></button>
-<div id="indexModal" role="dialog" aria-modal="true" aria-label="インデックスメニュー" hidden class="modal-overlay">
+<button id="indexBtn" title="記録帖" aria-label="記録帖"></button>
+<div id="indexModal" role="dialog" aria-modal="true" aria-label="記録帖メニュー" hidden class="modal-overlay">
   <div class="index-panel">
     <button class="close-btn" onclick="closeIndexModal(); onClickSE()" aria-label="閉じる"></button>
-    <h2>⚙ インデックス</h2>
+    <h2>⚙ 記録帖</h2>
     <div class="btn-list">
       <div class="btn-group volume-group">
         <div class="volume-row">
@@ -1617,7 +1617,7 @@ let bgmPlayToken = 0;
 
 
 let bgmEverStarted = false;
-/* ★インデックス内のBGM/SEボタンに変更 */
+/* ★記録帖内のBGM/SEボタンに変更 */
 const bgmBtn = document.getElementById("bgmBtnIndex"); // BGM ON/OFFボタン
 
 if (bgmBtn){
@@ -2462,7 +2462,7 @@ const $status = document.getElementById("status");
 const $charModal = document.getElementById("charModal");
 const $charList = document.getElementById("char-list");
 
-/* ★インデックスメニューDOM */
+/* ★記録帖メニューDOM */
 const $indexBtn = document.getElementById('indexBtn');
 const $indexModal = document.getElementById('indexModal');
 const $openHowtoBtn = document.getElementById('openHowtoBtn');
@@ -2659,11 +2659,11 @@ function updateCharModalContent(){ /* (省略: 変更なし) */
 }
 
 
-let wasPausedBeforeIndex = false; // インデックスを開く前のポーズ状態を保存
+let wasPausedBeforeIndex = false; // 記録帖を開く前のポーズ状態を保存
 let wasPausedBeforeChildModal = false; // 子モーダル（図鑑/操作説明）を開く前のポーズ状態を保存
 let isIndexOpen = false;
 
-/* ★インデックスメニュー関連 */
+/* ★記録帖メニュー関連 */
 function openIndexModal(){
   // ★開く：index だけ（なければ push に1回だけフォールバック）
   try {
@@ -2674,7 +2674,7 @@ function openIndexModal(){
     }
   } catch(e) {}
 
-  if (!isIndexOpen) { // インデックスが閉じている場合のみ、ポーズ状態を保存
+  if (!isIndexOpen) { // 記録帖が閉じている場合のみ、ポーズ状態を保存
     wasPausedBeforeIndex = paused;
     if (!paused) togglePause();
     isIndexOpen = true;
@@ -2691,7 +2691,7 @@ function closeIndexModal(){
   $indexModal.classList.remove('open');
   isIndexOpen = false;
 
-  // インデックスを開く前の状態に戻す
+  // 記録帖を開く前の状態に戻す
   if (paused && !wasPausedBeforeIndex) {
     togglePause();
   }
@@ -2700,7 +2700,7 @@ function closeIndexModal(){
 
 /* ★キャラ図鑑を開く・閉じる */
 function openCharModal(){ 
-  // インデックスが開いている前提
+  // 記録帖が開いている前提
   wasPausedBeforeChildModal = paused; 
   if (!paused) togglePause();
   
@@ -2715,13 +2715,13 @@ function closeCharModal(){
   $charModal.hidden = true;
   $indexModal.style.filter = "none";
   
-  // インデックスが開いていれば、ポーズ状態は維持（ゲームはポーズのまま）
+  // 記録帖が開いていれば、ポーズ状態は維持（ゲームはポーズのまま）
   if (isIndexOpen) {
-    // インデックスが開いているため、何もしない（paused = trueのまま）
+    // 記録帖が開いているため、何もしない（paused = trueのまま）
     return;
   }
 
-  // インデックスが閉じていれば、ゲーム開始前の状態に戻す
+  // 記録帖が閉じていれば、ゲーム開始前の状態に戻す
   if (paused && !wasPausedBeforeChildModal) { 
     togglePause(); 
   }
@@ -2787,13 +2787,13 @@ window.closeHowto = function(){
   // キーボードイベントを削除
   window.removeEventListener('keydown', onHowtoKey);
   
-  // インデックスが開いていれば、ポーズ状態は維持（ゲームはポーズのまま）
+  // 記録帖が開いていれば、ポーズ状態は維持（ゲームはポーズのまま）
   if (isIndexOpen) {
-    // インデックスが開いているため、何もしない（paused = trueのまま）
+    // 記録帖が開いているため、何もしない（paused = trueのまま）
     return;
   }
 
-  // インデックスが閉じていれば、ゲーム開始前の状態に戻す
+  // 記録帖が閉じていれば、ゲーム開始前の状態に戻す
   if (paused && !wasPausedBeforeChildModal) { 
     togglePause(); 
   }
@@ -2809,12 +2809,12 @@ function onHowtoKey(e){
 
 /* ===== 覚醒リセット関連 (新規) ===== */
 function openResetConfirmModal(){
-  $indexModal.hidden = true; // インデックスを閉じる
+  $indexModal.hidden = true; // 記録帖を閉じる
   $resetConfirmModal.hidden = false;
 }
 function closeResetConfirmModal(){
   $resetConfirmModal.hidden = true;
-  $indexModal.hidden = false; // インデックスに戻る
+  $indexModal.hidden = false; // 記録帖に戻る
 }
 
 /* 覚醒リセットは長押し時のみ確認モーダルを開く */
@@ -3254,7 +3254,7 @@ function buildRankSelectButtons(){ /* (省略: 変更なし) */
 }
 /* ===== RankMAX (Rank 5) の名称定義 ===== */
 // NORMALSとSPECIALSに続いて、ランクの名称一覧を定義します。
-// rankIndex (1-based) から名称を取得できるように、配列のインデックスを調整する必要があります。
+// rankIndex (1-based) から名称を取得できるように、配列の記録帖を調整する必要があります。
 // rankIndex 0: ミミック
 // rankIndex 1: ネオレトロ
 // rankIndex 2: シンギュラ
@@ -3511,7 +3511,7 @@ function updateRank(){ /* (省略: 変更なし) */
     /* ensure Unknown gate resets */
     try{
       if (typeof MAX_RANK_INDEX!=='undefined' && rankIndex===MAX_RANK_INDEX){
-        // ランクMAXインデックスに到達した瞬間、
+        // ランクMAX記録帖に到達した瞬間、
         // まだ一度もMAX解放していない場合だけ 闘値カウンタをリセットする
         if (typeof hasReachedMaxRank!=='undefined' && !hasReachedMaxRank){
           if (typeof unknownStageProgress!=='number') unknownStageProgress = 0;
@@ -5538,7 +5538,7 @@ canvas.addEventListener('touchstart',e=>{ e.preventDefault(); onStart(e.touches[
 canvas.addEventListener('touchmove',e=>{ e.preventDefault(); onMove(e.touches[0].clientX,e.touches[0].clientY); });
 canvas.addEventListener('touchend',onEnd);
 
-/* ★イベントリスナーをインデックス内のボタンに設定 */
+/* ★イベントリスナーを記録帖内のボタンに設定 */
 $indexBtn.addEventListener('click', openIndexModal);
 
 /* 背景クリックで閉じる処理 */
@@ -5756,7 +5756,7 @@ window.addEventListener("DOMContentLoaded", () => {
 /* ============================================================
    操作説明モーダル（Howto）— 安全・包括版
    - openHowto()/closeHowto() を提供（未定義でも動く）
-   - インデックスとの連携（ポーズ状態の保存/復帰）を考慮
+   - 記録帖との連携（ポーズ状態の保存/復帰）を考慮
    - 外側クリック/Escでクローズ
    - 画像配列が空でも落ちないフェイルセーフ
    ============================================================ */
@@ -5840,7 +5840,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       if ($indexModal) $indexModal.style.filter = 'none';
 
-      // インデックスが閉じているなら、元のポーズ状態に復帰
+      // 記録帖が閉じているなら、元のポーズ状態に復帰
       if (!window.isIndexOpen && typeof window.togglePause === 'function') {
         if (window.paused && !window.wasPausedBeforeChildModal) {
           window.togglePause(); // 再開
