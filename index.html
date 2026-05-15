@@ -1173,19 +1173,19 @@ input[type="range"]::-moz-range-thumb{
 @keyframes skillImageHold{
   0%{
     opacity:0;
-    transform:scale(.62) translateY(8px);
+    transform:scale(.62) translateY(14px);
   }
   28%{
     opacity:1;
-    transform:scale(1.10) translateY(0);
+    transform:scale(1.10) translateY(6px);
   }
   58%{
     opacity:1;
-    transform:scale(1.045) translateY(-2px);
+    transform:scale(1.045) translateY(4px);
   }
   100%{
     opacity:1;
-    transform:scale(1.085) translateY(0);
+    transform:scale(1.085) translateY(6px);
   }
 }
 
@@ -1193,11 +1193,11 @@ input[type="range"]::-moz-range-thumb{
 @keyframes skillImageOut{
   0%{
     opacity:1;
-    transform:scale(1.085) translateY(0);
+    transform:scale(1.085) translateY(6px);
   }
   100%{
     opacity:0;
-    transform:scale(1.26) translateY(-6px);
+    transform:scale(1.26) translateY(0);
   }
 }
 
@@ -1431,7 +1431,49 @@ html.ios #indexModal .vol-toggle{
   min-height: 52px;
 }
 </style>
+<style>
+/* === Android/Chrome: 音量スライダーの水色ゲージ復活 === */
+@media (hover: none) and (pointer: coarse){
+  html:not(.ios) #indexModal input[type="range"]{
+    --track-h: 10px;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 100% !important;
+    height: 32px !important;
+    border-radius: 999px !important;
+    outline: none !important;
+    background:
+      linear-gradient(
+        to right,
+        #33CFFF 0%,
+        #33CFFF var(--fill-pct, 50%),
+        rgba(255,255,255,.22) var(--fill-pct, 50%),
+        rgba(255,255,255,.22) 100%
+      ) !important;
+  }
 
+  html:not(.ios) #indexModal input[type="range"]::-webkit-slider-runnable-track{
+    height: 10px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+
+  html:not(.ios) #indexModal input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin-top: -7px !important;
+    border-radius: 50% !important;
+    background: #f5f7fb !important;
+    border: 1px solid rgba(0,0,0,.35) !important;
+    box-shadow:
+      0 0 6px rgba(255,255,255,.55),
+      0 0 10px rgba(51,207,255,.65) !important;
+  }
+}
+</style>
 </head>
 <body>
   <!-- ==== PASSKEY LOCK UI (added) ==== -->
@@ -2026,7 +2068,15 @@ if (seSlider){
 }
 if (voiceSlider){
   voiceSlider.addEventListener("input", e => { onVoiceSliderChange(e.target.value); });
-  voiceSlider.addEventListener("change", ()=>{ try{ onClickSE(); }catch(_){ } });
+  voiceSlider.addEventListener("change", ()=>{
+    try{
+      if (typeof Sound !== "undefined" && Sound && typeof Sound.play === "function") {
+        Sound.play("push", 0.85);
+      } else {
+        onClickSE();
+      }
+    }catch(_){}
+  });
 }
 
 
@@ -2860,6 +2910,35 @@ const SKILL_CONFIG = {
   "S_UNK": { img: "special_unk_skill", voice: "vo_rank4" }
 };
 
+/* === スキル演出素材の事前読み込み === */
+window.__skillCutinPreload = window.__skillCutinPreload || {};
+
+function preloadSkillCutinAssets(){
+  try{
+    if (typeof SKILL_CONFIG === "undefined") return;
+
+    Object.keys(SKILL_CONFIG).forEach(sym=>{
+      const cfg = SKILL_CONFIG[sym];
+      if (!cfg) return;
+
+      // 画像を先読み
+      try{
+        const img = new Image();
+        img.src = `images/${cfg.img}.png`;
+        window.__skillCutinPreload[sym] = img;
+      }catch(_){}
+
+      // 音声も軽くload
+      try{
+        const vo = document.getElementById(cfg.voice);
+        if (vo && typeof vo.load === "function") vo.load();
+      }catch(_){}
+    });
+  }catch(_){}
+}
+
+document.addEventListener("DOMContentLoaded", preloadSkillCutinAssets, { once:true });
+
 function loadImages(done){ 
     // Resilient loader for case-sensitive hosts (GitHub Pages)
   const triedFallback = new Set();
@@ -3408,6 +3487,110 @@ let comboEffectAnchor = { x: null, y: null };
 
 let comboLabelTimer = 0;
 let suppressComboVoice = false; // ランクアップ時に連鎖ボイスを抑制するフラグ
+let skillVoiceBusyUntil = 0;
+let pendingComboVoiceId = null;
+let pendingComboVoiceTimer = null;
+
+function nowMs(){
+  try{
+    return (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+  }catch(_){
+    return Date.now();
+  }
+}
+
+function reserveComboVoiceAfterSkill(voiceId){
+  if (!voiceId) return;
+
+  // 複数連鎖が重なった場合は、最後の連鎖ボイスを優先
+  pendingComboVoiceId = voiceId;
+
+  try{ clearTimeout(pendingComboVoiceTimer); }catch(_){}
+
+  const current = window.__skillVoiceElement || null;
+
+  // スキルボイス要素が再生中なら、ended を待ってから連鎖ボイスを鳴らす
+  if (current && !current.paused && !current.ended){
+    try{
+      if (window.__pendingComboVoiceOnSkillEnd){
+        current.removeEventListener('ended', window.__pendingComboVoiceOnSkillEnd);
+      }
+    }catch(_){}
+
+    window.__pendingComboVoiceOnSkillEnd = function(){
+      try{
+        const id = pendingComboVoiceId;
+        pendingComboVoiceId = null;
+        window.__skillVoiceElement = null;
+
+        if (id && typeof window.playVoiceById === "function"){
+          // 少しだけ間を置くと、音声の尻切れ感が減る
+          pendingComboVoiceTimer = setTimeout(()=>{
+            try{ window.playVoiceById(id); }catch(_){}
+          }, 120);
+        }
+      }catch(_){}
+    };
+
+    try{
+      current.addEventListener('ended', window.__pendingComboVoiceOnSkillEnd, { once:true });
+    }catch(_){}
+
+    return;
+  }
+
+  // スキルボイスが既に終わっている場合だけ、従来どおり少し遅らせて鳴らす
+  pendingComboVoiceTimer = setTimeout(()=>{
+    try{
+      const id = pendingComboVoiceId;
+      pendingComboVoiceId = null;
+      if (id && typeof window.playVoiceById === "function"){
+        window.playVoiceById(id);
+      }
+    }catch(_){}
+  }, 120);
+}
+
+let rankPriorityUntil = 0;
+
+function isRankPriorityActive(){
+  try{
+    const now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    return now < rankPriorityUntil;
+  }catch(_){
+    return false;
+  }
+}
+
+function startRankPriority(ms){
+  try{
+    const now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    rankPriorityUntil = now + (ms || 1800);
+
+    // 連鎖ボイス抑制
+    suppressComboVoice = true;
+
+    // 連鎖大演出の予約を解除
+    try{ pendingComboAurora = false; }catch(_){}
+    try{ pendingComboAuroraDue = 0; }catch(_){}
+    try{ comboFreezeUntil = 0; }catch(_){}
+    try{ pendingComboVoiceId = null; }catch(_){}
+    try{ clearTimeout(pendingComboVoiceTimer); }catch(_){}
+    try{
+  const el = window.__skillVoiceElement;
+  if (el && window.__pendingComboVoiceOnSkillEnd){
+    el.removeEventListener('ended', window.__pendingComboVoiceOnSkillEnd);
+  }
+}catch(_){}
+try{ window.__pendingComboVoiceOnSkillEnd = null; }catch(_){}
+
+    // 既に出ているスキルカットインを消す
+    try{
+      const overlay = document.getElementById("skill-overlay");
+      if (overlay) overlay.classList.remove("active", "fadeout");
+    }catch(_){}
+  }catch(_){}
+}
 
 function resetComboForNewMove(){
   comboCount = 0;
@@ -3434,17 +3617,33 @@ function endComboIfAny(){
         try { updateStatus('status: ' + info.name); } catch(_){}
       }
 
-      // ★ボイス再生部分（ランクアップ直後は抑制）
-      if (!suppressComboVoice && info.voiceId){ try{ window.playVoiceById && window.playVoiceById(info.voiceId); }catch(_){ } }
-      // 一度チェックしたらフラグはリセット
-      suppressComboVoice = false;
+// ★ボイス再生部分
+// ランクアップ直後は抑制。
+// スキルボイス再生中なら、連鎖ボイスは消さずに後から再生する。
+if (!suppressComboVoice && info.voiceId){
+  try{
+    const skillVoiceEl = window.__skillVoiceElement || null;
+
+if (
+  (typeof skillVoiceBusyUntil !== "undefined" && nowMs() < skillVoiceBusyUntil) ||
+  (skillVoiceEl && !skillVoiceEl.paused && !skillVoiceEl.ended)
+){
+  reserveComboVoiceAfterSkill(info.voiceId);
+} else {
+  window.playVoiceById && window.playVoiceById(info.voiceId);
+}
+  }catch(_){}
+}
+
+// 一度チェックしたらフラグはリセット
+suppressComboVoice = false;
     }
   }
 
 
   // ★コンボ最終判定時：連鎖数に応じて一度だけ演出を発生させる
-  if (comboCount >= 3){
-    try{
+  if (comboCount >= 3 && !(typeof isRankPriorityActive === "function" && isRankPriorityActive())){
+  try{
       // 6連鎖以上：大演出の直前に「沈黙フレーム（約0.1秒）」を挿入し、解放後にまとめて開始
       if (comboCount >= 6){
         const now = (typeof performance!=='undefined' && performance.now) ? performance.now() : Date.now();
@@ -3462,9 +3661,9 @@ function endComboIfAny(){
     }catch(_){}
   }
   // ★連鎖終了の残響（SEなし）
-  if (comboCount >= 4){
-    try{ spawnChainAfterglowEmbers(comboCount, comboEffectAnchor); }catch(_){ }
-  }
+  if (comboCount >= 4 && !(typeof isRankPriorityActive === "function" && isRankPriorityActive())){
+  try{ spawnChainAfterglowEmbers(comboCount, comboEffectAnchor); }catch(_){ }
+}
 
 // コンボの片付け
   comboCount = 0;
@@ -3944,9 +4143,12 @@ function updateRank(){ /* (省略: 変更なし) */
         // すでに hasReachedMaxRank が true の場合は、何もリセットしない（アイコンを消さない）
       }
     }catch(_){}
-    const vId = `vo_rank${Math.min(rankIndex,4)}`;
-    try{ window.playVoiceById && window.playVoiceById(vId); }catch(_){ }
-    Sound.play('bell', 1.0); // ランクアップ時、鐘を同時再生
+    // ★ランクアップ演出を最優先にする
+try{ startRankPriority(1900); }catch(_){}
+
+const vId = `vo_rank${Math.min(rankIndex,4)}`;
+try{ window.playVoiceById && window.playVoiceById(vId); }catch(_){ }
+Sound.play('bell', 1.0); // ランクアップ時、鐘を同時再生
   }
   // juso_spawn 解放は実際の出現時に行う（ランク到達では行わない）
   updateScoresUI();
@@ -4034,6 +4236,12 @@ function triggerSkillCutin(symbol, callback) {
     return;
   }
 
+  // ★ランクアップ演出中はスキルカットインを出さない
+  if (typeof isRankPriorityActive === "function" && isRankPriorityActive()){
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
   const overlay = document.getElementById('skill-overlay');
   const charImg = document.getElementById('skill-character');
 
@@ -4042,14 +4250,17 @@ function triggerSkillCutin(symbol, callback) {
     return;
   }
 
-  // ★実際に消えた特殊駒 symbol に対応した画像を出す
-  charImg.alt = '';
-  charImg.onerror = function(){
-    // Image/ が存在しない場合の保険
-    charImg.onerror = null;
-    charImg.src = `images/${config.img}.png`;
-  };
-  charImg.src = `Image/${config.img}.png`;
+ // ★実際に消えた特殊駒 symbol に対応した画像を出す
+// 初回迷子対策：Image/ ではなく、実フォルダ images/ を直接読む
+charImg.alt = '';
+charImg.onerror = null;
+
+try{
+  const pre = window.__skillCutinPreload && window.__skillCutinPreload[symbol];
+  charImg.src = (pre && pre.src) ? pre.src : `images/${config.img}.png`;
+}catch(_){
+  charImg.src = `images/${config.img}.png`;
+}
 
   // ★モード別演出
 overlay.className = `skill-overlay ${isKanki ? 'mode-kanki' : 'mode-shodo'}`;
@@ -4057,16 +4268,29 @@ overlay.classList.remove('active', 'fadeout');
 void overlay.offsetWidth; // 再発火を安定させる
 overlay.classList.add('active');
 
-  // ★rankIndexではなく、特殊駒ごとの voice を鳴らす
-  if (typeof playVoiceById === 'function') {
-    playVoiceById(config.voice);
-  } else {
-    const vo = document.getElementById(config.voice);
-    if (vo) {
-      try { vo.currentTime = 0; } catch(_) {}
-      try { vo.play(); } catch(_) {}
-    }
+  // ★スキルボイス優先時間。
+// 実音声の長さを完全取得できない環境もあるため、まずは固定値で安全に待つ。
+try{
+  skillVoiceBusyUntil = nowMs() + 3200;
+}catch(_){}
+
+// ★スキルボイス要素を記録して、連鎖ボイスは ended 後に回す
+try{
+  window.__skillVoiceElement = document.getElementById(config.voice) || null;
+}catch(_){
+  window.__skillVoiceElement = null;
+}
+
+if (typeof playVoiceById === 'function') {
+  playVoiceById(config.voice);
+} else {
+  const vo = window.__skillVoiceElement;
+  if (vo) {
+    try { vo.currentTime = 0; } catch(_) {}
+    try { vo.play(); } catch(_) {}
   }
+}
+
   // ★演出キャラ表示時間
 const HOLD_MS = 1050;  // 出現〜見せ場。CSSアニメと合わせる
 const FADE_MS = 520;   // 拡大しながら消える時間
@@ -7011,7 +7235,7 @@ window.shuffleBoard = function(){
 
     <div id="allmaxInputArea">
       <p id="allmaxMessage">
-        果て無き孤独の戦いの末、<br>
+        果て無き孤独な戦いの末、<br>
         最果ての称号に辿り着いた貴方。<br><br>
         修羅王丸と同じ景色を見た貴方に、<br>
         敬意を込めて「扉」を授けます。<br><br>
@@ -7189,7 +7413,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // === Voice Slider SE追加 ===
 (function(){
   const voiceSlider = document.querySelector('#voiceSlider, #voiceVolume, input[name="voiceVolume"]');
-  const se = document.getElementById('se_index'); // 既存SE流用
+  const se = document.getElementById('se_push'); // 既存SE流用
 
   if(voiceSlider && se){
     let lastPlay = 0;
@@ -7205,7 +7429,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
     voiceSlider.addEventListener('input', playTick);
-    voiceSlider.addEventListener('change', playTick);
   }
 })();
 
@@ -7295,18 +7518,19 @@ function showShuraSkillCutin(kind){
   background:rgba(0,0,0,.28);
 }
 
+/* スキル画像表示外枠 */
 #skill-overlay .skill-content{
   position:relative;
-  width:min(54vw, 260px);
-  height:min(54vw, 260px);
+  width:min(72vw, 360px);
+height:min(72vw, 360px);
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
 #skill-character{
-  max-width:82%;
-  max-height:82%;
+  max-width:96%;
+  max-height:96%;
   opacity:0;
   transform:scale(.55);
   transition:
@@ -7361,7 +7585,7 @@ function showShuraSkillCutin(kind){
 #skill-overlay.active .skill-content::before,
 #skill-overlay.active .skill-content::after{
   opacity:1;
-  transform:scale(1.28);
+  transform:scale(1.36);/光輪/
 }
 
 #skill-overlay.mode-kanki .skill-content::before{
