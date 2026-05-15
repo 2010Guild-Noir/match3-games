@@ -1475,19 +1475,16 @@ html.ios #indexModal .vol-toggle{
 }
 </style>
 <style>
-/* === Mobile: HUD高さを固定して盤面位置の上下ズレを防ぐ === */
-@media (max-width: 520px){
-  .hud{
-    min-height: 84px;
-    align-content: center;
-  }
+/* === スキル画像:盤面中央に出す === */
+.skill-overlay{
+  display:block !important;
+}
 
-  .hud .badge{
-    min-width: calc(100% - 28px);
-    box-sizing: border-box;
-    justify-content: center;
-    text-align: center;
-  }
+.skill-overlay .skill-content{
+  position:fixed !important;
+  left:var(--skill-cx, 50vw) !important;
+  top:var(--skill-cy, 50vh) !important;
+  transform:translate(-50%, -50%) !important;
 }
 </style>
 </head>
@@ -4265,6 +4262,16 @@ function triggerSkillCutin(symbol, callback) {
     if (typeof callback === 'function') callback();
     return;
   }
+
+// ★スキル演出を盤面(canvas)中央に表示する
+try{
+  const canvasEl = document.getElementById('gameCanvas');
+  if (canvasEl){
+    const rect = canvasEl.getBoundingClientRect();
+    overlay.style.setProperty('--skill-cx', (rect.left + rect.width / 2) + 'px');
+    overlay.style.setProperty('--skill-cy', (rect.top + rect.height / 2) + 'px');
+  }
+}catch(_){}
 
  // ★実際に消えた特殊駒 symbol に対応した画像を出す
 // 初回迷子対策：Image/ ではなく、実フォルダ images/ を直接読む
@@ -7251,7 +7258,7 @@ window.shuffleBoard = function(){
 
     <div id="allmaxInputArea">
       <p id="allmaxMessage">
-        果て無き孤独な戦いの末、<br>
+        途方も無き孤独な戦いの末、<br>
         最果ての称号に辿り着いた貴方。<br><br>
         修羅王丸と同じ景色を見た貴方に、<br>
         敬意を込めて「扉」を授けます。<br><br>
@@ -7260,7 +7267,7 @@ window.shuffleBoard = function(){
 
       <div id="allmaxInputRow">
         <input id="allmaxInput" type="password" placeholder="鍵を入力" autocomplete="off" />
-        <button id="allmaxOkBtn" type="button">OK</button>
+        <button id="allmaxOkBtn" type="button">解錠</button>
       </div>
 
       <div id="allmaxError">貴方は"未だ"その資格を得てはいないようだ…</div>
