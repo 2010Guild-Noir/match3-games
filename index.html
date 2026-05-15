@@ -579,7 +579,7 @@ details.help li {
 }
 #howtoModal .howto-img-wrap{position:relative;display:grid;place-items:center;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;}
 #howtoModal img#howtoImg{width:100%;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none;}
-#howtoModal .howto-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:9999px;border:1px solid var(--line);background:rgba(28,28,28,.9);color:var(--ink);cursor:pointer;z-index:10;}
+#howtoModal .howto-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:9999px;border:1px solid rgba(255,255,255,.18);background:rgba(28,28,28,.28);color:var(--ink);cursor:pointer;z-index:10;}
 #howtoModal .howto-nav.prev{left:8px;}
 #howtoModal .howto-nav.next{right:8px;}
 #howtoModal .howto-caption{margin-top:8px;text-align:center;font-size:13px;opacity:.9;}
@@ -3904,7 +3904,10 @@ function showScorePopup(pts, colorType){
 
   el.style.transform = "translate(-50%, -50%)";
   // ★色分け
-if (colorType === "gray" || isMinus) {
+if (colorType === "red") {
+  el.style.color = "#ff4444";
+  el.style.textShadow = "0 0 6px rgba(255,0,0,0.75)";
+} else if (colorType === "gray" || isMinus) {
   el.style.color = "#b8b8b8"; // ペナルティ
   el.style.textShadow = "0 0 4px rgba(0,0,0,0.85)";
 } else if (pts === 10) {
@@ -6342,12 +6345,22 @@ try{
 try{
   const penalty = (typeof SHUFFLE_PENALTY !== "undefined") ? SHUFFLE_PENALTY : 50;
   score = Math.max(0, score - penalty);
-  if (typeof showScorePopup === "function") showScorePopup(-penalty, "gray");
+  if (typeof showScorePopup === "function") showScorePopup(-penalty, "red");
   if (typeof updateScoresUI === "function") updateScoresUI();
 }catch(_){}
 
 if (typeof setComboText === 'function'){
-  try { setComboText("盤面をシャッフルしました。"); } catch(_){}
+  try {
+    setComboText("盤面をシャッフルしました。");
+
+    clearTimeout(window.__shuffleComboTextTimer);
+    window.__shuffleComboTextTimer = setTimeout(()=>{
+      try{
+        if (typeof setComboText === 'function') setComboText("");
+      }catch(_){}
+    }, 5000);
+
+  } catch(_){}
 }
 animState="drop"; prepareDrop();
 }
