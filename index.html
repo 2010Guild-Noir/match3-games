@@ -1474,6 +1474,22 @@ html.ios #indexModal .vol-toggle{
   }
 }
 </style>
+<style>
+/* === Mobile: HUD高さを固定して盤面位置の上下ズレを防ぐ === */
+@media (max-width: 520px){
+  .hud{
+    min-height: 84px;
+    align-content: center;
+  }
+
+  .hud .badge{
+    min-width: calc(100% - 28px);
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+  }
+}
+</style>
 </head>
 <body>
   <!-- ==== PASSKEY LOCK UI (added) ==== -->
