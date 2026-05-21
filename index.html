@@ -4002,42 +4002,52 @@ function setComboText(msg){
 
 function updateStatus(text){ if($status) $status.textContent=text; }
 function showScorePopup(pts, colorType){
+  const scoreEl = document.getElementById("score");
+  if (!scoreEl) return;
+
   const el = document.createElement("div");
 
   const isMinus = (typeof pts === "number" && pts < 0) || String(pts).charAt(0) === "-";
   el.textContent = isMinus ? String(pts) : "+" + pts;
 
-  el.style.position = "fixed";
-  el.style.left = "50%";
-  el.style.top = "50%";
-
-  el.style.transform = "translate(-50%, -50%)";
-  // ★色分け
-if (colorType === "red") {
-  el.style.color = "#ff4444";
-  el.style.textShadow = "0 0 6px rgba(255,0,0,0.75)";
-} else if (colorType === "orange") {
-  el.style.color = "#ff9f1a";
-  el.style.textShadow = "0 0 7px rgba(255,140,0,0.85)";
-} else if (colorType === "gray" || isMinus) {
-  el.style.color = "#b8b8b8"; // ペナルティ
-  el.style.textShadow = "0 0 4px rgba(0,0,0,0.85)";
-} else if (pts === 10) {
-  el.style.color = "#ffffff"; // 通常
-} else if (pts >= 30 && pts < 100) {
-  el.style.color = "#ffd700"; // 呪詛
-} else if (pts >= 100) {
-  el.style.color = "#ff4444"; // 強
-}
-  el.style.fontSize = "24px";
+  el.style.position = "absolute";
   el.style.fontWeight = "bold";
+  el.style.fontSize = "16px";
+  el.style.pointerEvents = "none";
   el.style.zIndex = "9999";
+
+  // ★色分け
+  if (colorType === "red") {
+    el.style.color = "#ff4444";
+    el.style.textShadow = "0 0 6px rgba(255,0,0,0.75)";
+  } else if (colorType === "orange") {
+    el.style.color = "#ff9f1a";
+    el.style.textShadow = "0 0 7px rgba(255,140,0,0.85)";
+  } else if (colorType === "gray" || isMinus) {
+    el.style.color = "#b8b8b8";
+    el.style.textShadow = "0 0 4px rgba(0,0,0,0.85)";
+  } else {
+    el.style.color = "#ffd700";
+    el.style.textShadow = "0 0 6px #000";
+  }
+
+  const rect = scoreEl.getBoundingClientRect();
+
+  el.style.left = (rect.right + 6) + "px";
+  el.style.top  = (rect.top + rect.height / 2) + "px";
+
+  el.style.transform = "translateY(-50%)";
+  el.style.transition = "all 0.5s ease-out";
 
   document.body.appendChild(el);
 
+  requestAnimationFrame(()=>{
+    el.style.top = (parseFloat(el.style.top) - 20) + "px";
+    el.style.opacity = "0";
+  });
+
   setTimeout(()=> el.remove(), 500);
 }
-
 
 function isTitleMaxReached(){
   try{
