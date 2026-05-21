@@ -4443,9 +4443,10 @@ function resolveVanishAndDrop(){ /* (省略: 変更なし) */
     }catch(_){ return false; }
   })();
   const specialsHit = new Set();
-let normalCount = 0;   // ★ここ
-let curseCount = 0;    // ★ここ
-let specialCount = 0;  // ★追加
+let normalCount = 0;   
+let curseCount = 0;   
+let specialCount = 0;  
+let specialBonusTotal = 0; // 特殊駒ボーナス表示用
 
 if (!isShuraCrossVanish){
   vanishMask.forEach(pos=>{
@@ -4542,6 +4543,7 @@ vanishMask.forEach(pos=>{
 // 点数ではなく、駒の種類で分類する
 if (SPECIAL_POINTS[key]) {
   specialCount++;
+  specialBonusTotal += SPECIAL_POINTS[key] || 0; // 特殊駒の追加ボーナスだけ合計
 } else if (JUSOS.includes(b)) {
   curseCount++;
 } else {
@@ -4640,8 +4642,8 @@ if (curseCount > 0) {
   showScorePopup(`${curseCount}`, 'purple');// 呪詛
 }
 
-if (specialCount > 0) {
-  showScorePopup(`${specialCount}`, 'blue');// 特殊
+if (specialBonusTotal > 0) {
+  showScorePopup(specialBonusTotal, 'blue'); // 特殊駒ボーナス
 }
 
 if (comboBonus > 0) {
