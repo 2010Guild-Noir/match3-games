@@ -664,6 +664,18 @@ details.help li {
 }
 
 
+/* ユーザーのパスキー表示 */
+.player-id-display{
+  margin-top:-4px;
+  margin-bottom:4px;
+  font-size:11px;
+  line-height:1.4;
+  color:rgba(245,247,251,0.58);
+  letter-spacing:0.04em;
+  text-align:center;
+  user-select:text;
+}
+
 /* ★外枠の上下隙間ゼロ＋黒背景を確実に全面表示 */
 html, body{
   height:100%;
@@ -1297,6 +1309,41 @@ html.ios #indexModal .vol-toggle{
 </style>
 
 <style>
+/* === iOS専用：音量 小・中・大 ボタン === */
+.ios-volume-steps{
+  display:none;
+}
+
+html.ios #indexModal .ios-volume-steps{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin:4px 0 8px;
+}
+
+.ios-vol-step{
+  font-size:12px;
+  line-height:1;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.22);
+  background:linear-gradient(180deg,#202126,#14151a);
+  color:#f5f7fb;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.ios-vol-step.active{
+  border-color:#4169E1;
+  box-shadow:
+    0 0 6px rgba(255,255,255,0.35),
+    0 0 10px rgba(65,105,225,0.65);
+}
+</style>
+
+
+<style>
 /* Prevent label wrapping/clipping on audio toggle buttons */
 #bgmBtnIndex, #seBtnIndex, #voiceBtnIndex{
   white-space: nowrap !important;
@@ -1419,7 +1466,7 @@ html.ios #indexModal .vol-toggle{
       <p class="desc">
         <b>「永遠の焦土パズル」へようこそ</b><br/><br/>
         お客様専用パスキーを入力してください。<br/>
-        パスキーは使い切りのため、他の端末には使えなくなります。<br/>
+        <ご注意>パスキーを解除すると、現在このページにアクセスしている端末とブラウザでのみプレイ可能となります。<br/>
         この端末で一度解錠したら、以後は入力不要でプレイできます。<br/>
       </p>
 
@@ -1603,6 +1650,15 @@ html.ios #indexModal .vol-toggle{
     }
 
     localStorage.setItem(LS_UNLOCKED, "1");
+
+try{
+  localStorage.setItem("supporter_player_id_v1", pass);
+}catch(_){}
+
+try{
+  if (typeof updatePlayerIdDisplay === "function") updatePlayerIdDisplay();
+}catch(_){}
+
     setMsg("解錠しました。", "ok");
     playUnlockAudioOnce();
     runUnlockFxThenShowGame();
@@ -1630,6 +1686,27 @@ window.store = window.store || {
   set: function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ try{ localStorage.setItem(k, String(v)); }catch(e2){} } },
   del: function(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
+</script>
+
+<script>
+function updatePlayerIdDisplay(){
+  try{
+    const el = document.getElementById("playerIdDisplay");
+    if (!el) return;
+
+    const id = localStorage.getItem("supporter_player_id_v1");
+
+    if (id){
+      el.textContent = "Player ID：" + id;
+    } else {
+      el.textContent = "Player ID：未登録";
+    }
+  }catch(_){}
+}
+
+try{
+  document.addEventListener("DOMContentLoaded", updatePlayerIdDisplay);
+}catch(_){}
 </script>
 
 <div class="wrap">
@@ -1693,7 +1770,8 @@ window.store = window.store || {
   <audio id="se_push"       src="audio/se_push.mp3"   preload="auto"></audio>
   <audio id="se_bell"       src="audio/se_bell.mp3"    preload="auto"></audio>
   <audio id="se_rumble"     src="audio/se_rumble.mp3"  preload="auto"></audio>
-  <audio id="se_not"       src="audio/se_not.mp3"  preload="auto"></audio>
+  <audio id="se_not"        src="audio/se_not.mp3"  preload="auto"></audio>
+  <audio id="vo_sample" src="audio/vo_sample.mp3"  preload="auto"></audio>
   <audio id="vo_rank0" src="audio/vo_rank0.mp3" preload="auto"></audio>
   <audio id="vo_rank1" src="audio/vo_rank1.mp3" preload="auto"></audio>
   <audio id="vo_rank2" src="audio/vo_rank2.mp3" preload="auto"></audio>
@@ -1734,6 +1812,9 @@ window.store = window.store || {
       <button class="btn" id="btnCharIntroIndex" onclick="openCharModal(); onClickSE()">👤 修羅王丸 顕現名鑑</button>
       
       <button class="btn" id="openHowtoBtn" onclick="openHowto(); onClickSE()">ⓘ 操作説明</button>
+      <div id="playerIdDisplay" class="player-id-display">
+  Player ID：未登録
+</div>
       
       <button class="btn btn-reset" id="resetRankBtn" aria-label="覚醒ランクのリセット" title="覚醒ランクのリセット">
         <span class="reset-hold-ring" aria-hidden="true">
@@ -1751,10 +1832,10 @@ window.store = window.store || {
 <div id="resetConfirmModal" role="dialog" aria-modal="true" aria-label="覚醒ランクのリセット確認" hidden>
   <div class="modal-content">
     <h3>覚醒ランクをリセットしますか？</h3>
-    <p>これまでの覚醒ランクと暗躍値/称号が初期化されます。</p>
+    <p>獲得した覚醒ランクと暗躍値/称号が初期化されます。</br>※選択取消はできません。ご注意ください。</p>
     <div class="confirm-btns">
-      <button class="btn" id="confirmResetNo" onclick="closeResetConfirmModal(); onClickSE()">いいえ</button>
-      <button class="btn btn-reset" id="confirmResetYes" onclick="resetRank(); onClickSE()">はい</button>
+      <button class="btn" id="confirmResetNo" onclick="closeResetConfirmModal(); onClickSE()">思い留まる…</button>
+      <button class="btn btn-reset" id="confirmResetYes" onclick="resetRank(); onClickSE()">全てを無に帰す</button>
     </div>
   </div>
 </div>
@@ -2041,7 +2122,6 @@ function playSESliderPreview(){
 }
 
 let __voiceSliderPreviewTimer = null;
-let __voiceSliderPreviewLastAt = 0;
 
 function playVoiceSliderPreview(){
   try{
@@ -2052,27 +2132,19 @@ function playVoiceSliderPreview(){
       ? __getVoiceEffectiveVol()
       : Math.max(0, Math.min(1, Number(store.get("voiceVol", VOICE_DEFAULT_VOL)) || 0));
 
-    if (vol <= 0) return;
-
-    const now = Date.now();
-
-    // 鳴りすぎ防止
-    if (now - __voiceSliderPreviewLastAt < 260) return;
-    __voiceSliderPreviewLastAt = now;
-
-    const vo = document.getElementById("vo_rank0");
+    const vo = document.getElementById("vo_sample") || document.getElementById("vo_rank0");
     if (!vo) return;
 
-    // 他のボイスが鳴っていたら止める
-    try{
-      if (typeof __voiceCurrent !== "undefined" && __voiceCurrent && __voiceCurrent !== vo){
-        __voiceCurrent.pause();
-        __voiceCurrent.currentTime = 0;
-      }
-      __voiceCurrent = vo;
-    }catch(_){}
+    // 音量0なら止める
+    if (vol <= 0){
+      try{
+        vo.pause();
+        vo.currentTime = 0;
+      }catch(_){}
+      return;
+    }
 
-    // 現在のVOICE音量を反映
+    // 現在のVOICE音量を即反映
     try{
       if (typeof __setElementVolumeSafe === "function"){
         __setElementVolumeSafe(vo, vol);
@@ -2089,24 +2161,36 @@ function playVoiceSliderPreview(){
       }
     }catch(_){}
 
-    try{ vo.pause(); }catch(_){}
-    try{ vo.currentTime = 0; }catch(_){}
+    // 他のボイスが鳴っていたら止める。ただし試聴ボイス自身は止めない
+    try{
+      if (typeof __voiceCurrent !== "undefined" && __voiceCurrent && __voiceCurrent !== vo){
+        __voiceCurrent.pause();
+        __voiceCurrent.currentTime = 0;
+      }
+      __voiceCurrent = vo;
+    }catch(_){}
 
-    if (typeof __playMediaSafe === "function"){
-      __playMediaSafe(vo);
-    } else {
-      const p = vo.play();
-      if (p && typeof p.catch === "function") p.catch(()=>{});
+    // すでに再生中なら、頭出しせず音量だけ反映する
+    if (vo.paused || vo.ended){
+      try{ vo.currentTime = 0; }catch(_){}
+
+      if (typeof __playMediaSafe === "function"){
+        __playMediaSafe(vo);
+      } else {
+        const p = vo.play();
+        if (p && typeof p.catch === "function") p.catch(()=>{});
+      }
     }
 
-    // 2秒だけ鳴らす
-if (__voiceSliderPreviewTimer) clearTimeout(__voiceSliderPreviewTimer);
-__voiceSliderPreviewTimer = setTimeout(()=>{
-  try{
-    vo.pause();
-    vo.currentTime = 0;
-  }catch(_){}
-}, 2000);
+    // vo_sample.mp3 は10秒あるので、2秒では止めない
+    // 操作後もしばらく鳴らし、自然終了に近い形にする
+    if (__voiceSliderPreviewTimer) clearTimeout(__voiceSliderPreviewTimer);
+    __voiceSliderPreviewTimer = setTimeout(()=>{
+      try{
+        vo.pause();
+        vo.currentTime = 0;
+      }catch(_){}
+    }, 11000);
 
   }catch(_){}
 }
