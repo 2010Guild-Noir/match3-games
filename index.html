@@ -1265,7 +1265,7 @@ html:not(.ios) #indexModal input[type="range"]::-moz-range-track{
 }
 
 html:not(.ios) #indexModal input[type="range"]::-moz-range-thumb{
-  width:20px;ss
+  width:20px;
   height:20px;
 
   border-radius:50%;
@@ -1307,6 +1307,41 @@ html.ios #indexModal .vol-toggle{
   overflow:visible !important;
 }
 </style>
+
+<style>
+/* === iOS専用：音量 小・中・大 ボタン === */
+.ios-volume-steps{
+  display:none;
+}
+
+html.ios #indexModal .ios-volume-steps{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin:4px 0 8px;
+}
+
+.ios-vol-step{
+  font-size:12px;
+  line-height:1;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.22);
+  background:linear-gradient(180deg,#202126,#14151a);
+  color:#f5f7fb;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.ios-vol-step.active{
+  border-color:#4169E1;
+  box-shadow:
+    0 0 6px rgba(255,255,255,0.35),
+    0 0 10px rgba(65,105,225,0.65);
+}
+</style>
+
 
 <style>
 /* Prevent label wrapping/clipping on audio toggle buttons */
@@ -2259,6 +2294,119 @@ try{
   }
   if (voiceSlider){
     voiceSlider.addEventListener("input", (e)=>{ try{ onVoiceSliderChange(e.target.value); }catch(_){ } }, {passive:true});
+  }
+}catch(_){}
+
+
+// === iOS専用：音量 小・中・大 ボタン生成 ===
+function setupIOSVolumeSteps(){
+  try{
+    if (!document.documentElement.classList.contains("ios")) return;
+
+    const configs = [
+      {
+        slider: bgmSlider,
+        label: "bgm",
+        values: [["小", 30], ["中", 60], ["大", 90]],
+        onChange: onBgmSliderChange
+      },
+      {
+        slider: seSlider,
+        label: "se",
+        values: [["小", 30], ["中", 60], ["大", 90]],
+        onChange: onSeSliderChange
+      },
+      {
+        slider: voiceSlider,
+        label: "voice",
+        values: [["小", 30], ["中", 60], ["大", 90]],
+        onChange: onVoiceSliderChange
+      }
+    ];
+
+    configs.forEach(cfg=>{
+      const slider = cfg.slider;
+      if (!slider) return;
+
+      const row = slider.closest(".volume-row");
+      if (!row || !row.parentNode) return;
+
+      // 二重生成防止
+      if (row.parentNode.querySelector(`.ios-volume-steps[data-for="${cfg.label}"]`)) return;
+
+      const wrap = document.createElement("div");
+      wrap.className = "ios-volume-steps";
+      wrap.dataset.for = cfg.label;
+
+      cfg.values.forEach(([text, value])=>{
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ios-vol-step";
+        btn.textContent = text;
+        btn.dataset.value = String(value);
+
+        btn.addEventListener("click", ()=>{
+          try{
+            userGesture && userGesture();
+          }catch(_){}
+
+          try{
+            ensureGraph && ensureGraph();
+          }catch(_){}
+
+          try{
+            slider.value = String(value);
+          }catch(_){}
+
+          try{
+            if (typeof updateRangeFill === "function") updateRangeFill(slider);
+          }catch(_){}
+
+          try{
+            if (typeof cfg.onChange === "function") cfg.onChange(value);
+          }catch(_){}
+
+          // 決定音
+          try{ onClickSE(); }catch(_){}
+
+          // active表示更新
+          try{
+            wrap.querySelectorAll(".ios-vol-step").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");
+          }catch(_){}
+        });
+
+        wrap.appendChild(btn);
+      });
+
+      row.insertAdjacentElement("afterend", wrap);
+
+      // 初期active表示
+      try{
+        const current = Number(slider.value || 0);
+        let nearest = null;
+        let diff = Infinity;
+
+        wrap.querySelectorAll(".ios-vol-step").forEach(btn=>{
+          const v = Number(btn.dataset.value);
+          const d = Math.abs(v - current);
+          if (d < diff){
+            diff = d;
+            nearest = btn;
+          }
+        });
+
+        if (nearest) nearest.classList.add("active");
+      }catch(_){}
+    });
+  }catch(_){}
+}
+
+try{
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", ()=>setTimeout(setupIOSVolumeSteps, 100));
+  } else {
+    setTimeout(setupIOSVolumeSteps, 100);
   }
 }catch(_){}
 
