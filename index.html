@@ -1309,41 +1309,6 @@ html.ios #indexModal .vol-toggle{
 </style>
 
 <style>
-/* === iOS専用：音量 小・中・大 ボタン === */
-.ios-volume-steps{
-  display:none;
-}
-
-html.ios #indexModal .ios-volume-steps{
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  margin:4px 0 8px;
-}
-
-.ios-vol-step{
-  font-size:12px;
-  line-height:1;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,0.22);
-  background:linear-gradient(180deg,#202126,#14151a);
-  color:#f5f7fb;
-  cursor:pointer;
-  user-select:none;
-  -webkit-tap-highlight-color:transparent;
-}
-
-.ios-vol-step.active{
-  border-color:#4169E1;
-  box-shadow:
-    0 0 6px rgba(255,255,255,0.35),
-    0 0 10px rgba(65,105,225,0.65);
-}
-</style>
-
-
-<style>
 /* Prevent label wrapping/clipping on audio toggle buttons */
 #bgmBtnIndex, #seBtnIndex, #voiceBtnIndex{
   white-space: nowrap !important;
