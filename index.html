@@ -1314,35 +1314,60 @@ html.ios #indexModal .vol-toggle{
   display:none;
 }
 
-/* iPhoneではON/OFFボタンを少し小さくして、小中大とバランスを取る */
+/* iPhone：音量セクションをカード状に分けて見やすくする */
+html.ios #indexModal .volume-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+
+  margin:10px 0 0;
+  padding:10px 10px 6px;
+
+  border:1px solid rgba(255,255,255,0.10);
+  border-bottom:none;
+  border-radius:14px 14px 0 0;
+  background:rgba(255,255,255,0.035);
+}
+
+/* ON/OFFボタンは少し控えめに */
 html.ios #indexModal .vol-toggle{
-  font-size:15px;
-  padding:10px 14px;
-  min-width:118px;
-  min-height:42px;
+  font-size:14px;
+  padding:9px 12px;
+  min-width:112px;
+  min-height:40px;
   border-radius:999px;
 }
 
-/* 小・中・大ボタン */
+/* 小・中・大ボタンを同じカードの下段に見せる */
 html.ios #indexModal .ios-volume-steps{
   display:flex;
   justify-content:center;
   gap:8px;
-  margin:0 0 10px;
   width:100%;
+
+  margin:0 0 10px;
+  padding:0 10px 10px;
+
+  border:1px solid rgba(255,255,255,0.10);
+  border-top:none;
+  border-radius:0 0 14px 14px;
+  background:rgba(255,255,255,0.035);
 }
 
 .ios-vol-step{
   flex:1;
   max-width:78px;
-  min-height:42px;
-  font-size:15px;
+  min-height:40px;
+  font-size:14px;
   line-height:1;
   padding:10px 0;
+
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.22);
   background:linear-gradient(180deg,#202126,#14151a);
   color:#f5f7fb;
+
   cursor:pointer;
   user-select:none;
   -webkit-tap-highlight-color:transparent;
