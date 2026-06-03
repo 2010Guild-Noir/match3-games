@@ -1330,7 +1330,6 @@ html.ios #indexModal .volume-row{
 }
 
 /* iPhoneでは左の説明ラベルとスライダーは隠す */
-html.ios #indexModal .volume-text,
 html.ios #indexModal .slider-hit,
 html.ios #indexModal input[type="range"]{
   display:none !important;
@@ -2428,8 +2427,19 @@ function setupIOSVolumeSteps(){
         }catch(_){}
 
         try{
+          if (typeof dispatchRangeInput === "function") dispatchRangeInput(slider);
+        }catch(_){}
+
+        try{
           if (typeof cfg.onChange === "function") cfg.onChange(next);
         }catch(_){}
+
+        try{
+          if (cfg.label === "bgm" && typeof __applyBgmVolume === "function") __applyBgmVolume();
+          if (cfg.label === "se" && typeof __applySeVolume === "function") __applySeVolume();
+          if (cfg.label === "voice" && typeof __applyVoiceVolume === "function") __applyVoiceVolume();
+        }catch(_){}
+
 
         // BGMがONなら、音量変更後に再開保険
         try{
