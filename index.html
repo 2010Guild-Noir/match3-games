@@ -2421,32 +2421,28 @@ function setupIOSVolumeSteps(){
 
   const next = getNextValue(slider.value, cfg.values);
 
-  try{
-    slider.value = String(next);
-  }catch(_){}
+  try{ slider.value = String(next); }catch(_){}
+  try{ if (typeof updateRangeFill === "function") updateRangeFill(slider); }catch(_){}
 
-  try{
-    if (typeof updateRangeFill === "function") updateRangeFill(slider);
-  }catch(_){}
+  // 既存の音量変更ルートに通す
+  try{ if (typeof cfg.onChange === "function") cfg.onChange(next); }catch(_){}
 
-  // 既存の音量変更ルートに一本化する
+  // iPhone保険：実出力側へ即時反映。ON/OFF状態はここでは直接触らない。
   try{
-    if (typeof cfg.onChange === "function") cfg.onChange(next);
-  }catch(_){}
-
-  // BGMだけは再生復帰の保険
-  try{
-    if (cfg.label === "bgm" && next > 0 && typeof safeStartBGM === "function"){
-      safeStartBGM(currentBGM());
+    if (cfg.label === "bgm"){
+      if (typeof __applyBgmVolume === "function") __applyBgmVolume();
+      if (next > 0 && typeof safeStartBGM === "function") safeStartBGM(currentBGM());
+    } else if (cfg.label === "se"){
+      if (typeof __applySeVolume === "function") __applySeVolume();
+    } else if (cfg.label === "voice"){
+      if (typeof __applyVoiceVolume === "function") __applyVoiceVolume();
     }
   }catch(_){}
 
   refreshButton();
 
   // 確認音：SEボタン自身を触った時は onSeSliderChange 内の試聴音に任せる
-  try{
-    if (cfg.label !== "se") onClickSE();
-  }catch(_){}
+  try{ if (cfg.label !== "se") onClickSE(); }catch(_){}
 });
 
       wrap.appendChild(btn);
@@ -2475,23 +2471,44 @@ const VOICE_DEFAULT_VOL = 0.75;
 function makePool(baseEl, n){
   // baseEl: an existing <audio> element in the DOM
   const arr = [baseEl.cloneNode(true)];
-  try{ arr[0].pause(); }catch(_){}
-  try{ arr[0].currentTime = 0; }catch(_){}
+  try{ arr[0].pause(); }catch(_){ }
+  try{ arr[0].currentTime = 0; }catch(_){ }
   for(let i=1;i<n;i++){
     const clone = baseEl.cloneNode(true);
-    try{ clone.pause(); }catch(_){}
-    try{ clone.currentTime = 0; }catch(_){}
+    try{ clone.pause(); }catch(_){ }
+    try{ clone.currentTime = 0; }catch(_){ }
     arr.push(clone);
   }
   let idx = 0;
   return {
-    play(vol){
+    play(volMul){
       const el = arr[idx++ % arr.length];
-      try{ el.pause(); }catch(_){}
-      try{ el.currentTime = 0; }catch(_){}
-      try{ el.volume = vol; }catch(_){ }
-      // iOSのみ：SEバスへ接続（スライダーを確実に効かせる）
-      if (IS_IOS){ try{ var g = ensureGraph(); if (g) connectToBus(el, g.se); }catch(_){ } }
+      try{ el.pause(); }catch(_){ }
+      try{ el.currentTime = 0; }catch(_){ }
+
+      let connectedToSeBus = false;
+      if (typeof IS_IOS !== "undefined" && IS_IOS){
+        try{
+          const g = ensureGraph();
+          if (g && g.se){
+            connectedToSeBus = !!connectToBus(el, g.se);
+            try{ if (typeof __applySeVolume === "function") __applySeVolume(); }catch(_){ }
+          }
+        }catch(_){ }
+      }
+
+      // SEバス接続済みならGainで音量制御。未接続/非iOSならaudio.volumeに実効音量を入れる。
+      let outVol = Number(volMul);
+      if (!isFinite(outVol)) outVol = 1;
+      if (!connectedToSeBus){
+        try{
+          const eff = (typeof __getSeEffectiveVol === "function") ? __getSeEffectiveVol() : ((window.Sound && Sound.enabled) ? (Sound.vol || 1) : 0);
+          outVol *= eff;
+        }catch(_){
+          try{ outVol *= (window.Sound && Sound.vol!=null ? Sound.vol : 1); }catch(__){ }
+        }
+      }
+      try{ el.volume = Math.max(0, Math.min(1, outVol)); }catch(_){ }
       var p = el.play(); if(p && typeof p.catch==='function') p.catch(function(){});
     }
   };
@@ -2541,9 +2558,9 @@ const Sound={
     }
 
     const m = (this.mul && this.mul[n]!=null) ? this.mul[n] : 1;
-    const g = window.__audioGraph;
-    const v = (g && g.se && g.se.gain) ? (volMul * m) : (this.vol * volMul * m);
-    p.play(v);
+    try{ if (typeof __applySeVolume === "function") __applySeVolume(); }catch(_){ }
+    // 実効音量は makePool 側で「SEバス接続済みならGain、未接続ならaudio.volume」に振り分ける。
+    p.play(volMul * m);
   },
 };
 Sound.init();
@@ -2560,15 +2577,18 @@ let __duckReleaseTimer = null;
 // iOSでaudio.volumeが効かない/端末依存になる場合に備え、WebAudio(GainNode)で音量制御する
 function connectToBus(el, bus){
   try{
-    if (!IS_IOS) return;
-    if (!el || !bus) return;
+    if (!IS_IOS) return false;
+    if (!el || !bus) return false;
     const g = window.__audioGraph;
-    if (!g || !g.ctx || !g.sources) return;
-    if (g.sources.has(el)) return;
+    if (!g || !g.ctx || !g.sources) return false;
+    if (g.sources.has(el)) return true;
     const src = g.ctx.createMediaElementSource(el);
     src.connect(bus);
     g.sources.set(el, src);
-  }catch(_){}
+    return true;
+  }catch(_){
+    return false;
+  }
 }
 function connectKnownAudio(){
   try{
@@ -2576,30 +2596,42 @@ function connectKnownAudio(){
     const g = ensureGraph();
     if (!g) return;
     // BGM要素（2曲）を必ずバスへ
-    try{ if (bgm1) connectToBus(bgm1, g.bgm); }catch(_){}
-    try{ if (bgm2) connectToBus(bgm2, g.bgm); }catch(_){}
-  }catch(_){}
-}
+    try{ if (bgm1) connectToBus(bgm1, g.bgm); }catch(_){ }
+    try{ if (bgm2) connectToBus(bgm2, g.bgm); }catch(_){ }
 
+    // VOICE要素もバスへ接続（接続済みなら何もしない）
+    try{
+      document.querySelectorAll('audio[id^="vo_"]').forEach(function(el){
+        try{ connectToBus(el, g.voice); }catch(_){ }
+      });
+    }catch(_){ }
+  }catch(_){ }
+}
 function __clamp01(x){ x = Number(x); return isFinite(x) ? Math.max(0, Math.min(1, x)) : 0; }
 
 function __applyBgmVolume(){
   const base = __clamp01(store.get("bgmVol", BGM_DEFAULT_VOL));
-  const iosLimit = (typeof IS_IOS!=='undefined' && IS_IOS) ? 0.7 : 1.0;
+  const iosLimit = (typeof IS_IOS!=="undefined" && IS_IOS) ? 0.7 : 1.0;
   const eff  = ((bgmOn && !bgmMuted) ? base : 0) * (__ducking ? 0.65 : 1) * iosLimit;
 
-  // WebAudioバスがあればGainで制御（iOSで確実）
-  try{
-    const g = window.__audioGraph;
-    if (g && g.bgm && g.bgm.gain){
-      g.bgm.gain.value = eff;
-      return;
-    }
-  }catch(_){}
+  let bgm1Connected = false;
+  let bgm2Connected = false;
 
-  // フォールバック
-  try{ bgm1.volume = eff; }catch(_){}
-  try{ bgm2.volume = eff; }catch(_){}
+  try{
+    if (typeof IS_IOS!=="undefined" && IS_IOS){
+      const g = ensureGraph();
+      if (g && g.bgm){
+        try{ bgm1Connected = !!connectToBus(bgm1, g.bgm); }catch(_){ }
+        try{ bgm2Connected = !!connectToBus(bgm2, g.bgm); }catch(_){ }
+        try{ if (g.bgm && g.bgm.gain) g.bgm.gain.value = eff; }catch(_){ }
+      }
+    }
+  }catch(_){ }
+
+  // WebAudio接続済みならGainで制御するためaudio要素は最大にする。
+  // 未接続/非iOSではaudio.volume側に直接反映する。
+  try{ if (bgm1) bgm1.volume = bgm1Connected ? 1 : eff; }catch(_){ }
+  try{ if (bgm2) bgm2.volume = bgm2Connected ? 1 : eff; }catch(_){ }
 }
 
 function __applySeVolume(){
@@ -2608,9 +2640,8 @@ function __applySeVolume(){
     const g = window.__audioGraph;
     if (g && g.se && g.se.gain){
       g.se.gain.value = eff;
-      return;
     }
-  }catch(_){}
+  }catch(_){ }
 }
 
 function __getSeEffectiveVol(){
@@ -2627,13 +2658,34 @@ function __getVoiceEffectiveVol(){
 
 function __applyVoiceVolume(){
   const eff = __getVoiceEffectiveVol();
+  let hasVoiceBus = false;
   try{
     const g = window.__audioGraph;
     if (g && g.voice && g.voice.gain){
       g.voice.gain.value = eff;
-      return;
+      hasVoiceBus = true;
     }
-  }catch(_){}
+  }catch(_){ }
+
+  // 鳴っているボイス、試聴ボイス、全vo_*要素に即時反映。
+  // バス接続済みならGainで制御するため要素側は1。未接続なら要素側にeff。
+  try{
+    document.querySelectorAll('audio[id^="vo_"]').forEach(function(el){
+      try{
+        let connected = false;
+        if (typeof IS_IOS!=="undefined" && IS_IOS && hasVoiceBus){
+          const g = window.__audioGraph;
+          connected = !!connectToBus(el, g.voice);
+        }
+        el.volume = connected ? 1 : eff;
+      }catch(_){ }
+    });
+  }catch(_){ }
+  try{
+    if (typeof __voiceCurrent !== "undefined" && __voiceCurrent){
+      __voiceCurrent.volume = hasVoiceBus ? 1 : eff;
+    }
+  }catch(_){ }
 }
 
 function __setElementVolumeSafe(el, vol){
@@ -7315,7 +7367,7 @@ var REDUCED=false; try{ REDUCED = window.matchMedia && window.matchMedia('(prefe
 
       window.__audioGraph = {ctx: audioCtx, master: masterGain, bgm: bgmGain, se: seGain, voice: voiceGain, sources: new Map()};
       // 既存audio要素を接続（iOSでvolumeが効かないケース用）
-      //try{ connectKnownAudio(); }catch(_){}
+      try{ connectKnownAudio(); }catch(_){}
       return window.__audioGraph;
     }catch(_){
       return null;
