@@ -1314,17 +1314,31 @@ html.ios #indexModal .vol-toggle{
   display:none;
 }
 
+/* iPhoneではON/OFFボタンを少し小さくして、小中大とバランスを取る */
+html.ios #indexModal .vol-toggle{
+  font-size:15px;
+  padding:10px 14px;
+  min-width:118px;
+  min-height:42px;
+  border-radius:999px;
+}
+
+/* 小・中・大ボタン */
 html.ios #indexModal .ios-volume-steps{
   display:flex;
   justify-content:center;
-  gap:6px;
-  margin:4px 0 8px;
+  gap:8px;
+  margin:0 0 10px;
+  width:100%;
 }
 
 .ios-vol-step{
-  font-size:12px;
+  flex:1;
+  max-width:78px;
+  min-height:42px;
+  font-size:15px;
   line-height:1;
-  padding:7px 10px;
+  padding:10px 0;
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.22);
   background:linear-gradient(180deg,#202126,#14151a);
@@ -2301,25 +2315,29 @@ try{
 // === iOS専用：音量 小・中・大 ボタン生成 ===
 function setupIOSVolumeSteps(){
   try{
-    if (!document.documentElement.classList.contains("ios")) return;
+    const isIOSNow = !!window.IS_IOS || document.documentElement.classList.contains("ios");
+    if (!isIOSNow) return;
+
+    // 念のため、iOS判定がtrueならclassも付ける
+    document.documentElement.classList.add("ios");
 
     const configs = [
       {
         slider: bgmSlider,
         label: "bgm",
-        values: [["小", 30], ["中", 60], ["大", 90]],
+        values: [["小", 25], ["中", 55], ["大", 90]],
         onChange: onBgmSliderChange
       },
       {
         slider: seSlider,
         label: "se",
-        values: [["小", 30], ["中", 60], ["大", 90]],
+        values: [["小", 25], ["中", 55], ["大", 90]],
         onChange: onSeSliderChange
       },
       {
         slider: voiceSlider,
         label: "voice",
-        values: [["小", 30], ["中", 60], ["大", 90]],
+        values: [["小", 25], ["中", 55], ["大", 90]],
         onChange: onVoiceSliderChange
       }
     ];
@@ -2346,14 +2364,11 @@ function setupIOSVolumeSteps(){
         btn.dataset.value = String(value);
 
         btn.addEventListener("click", ()=>{
-          try{
-            userGesture && userGesture();
-          }catch(_){}
+          try{ userGesture && userGesture(); }catch(_){}
+          try{ ensureGraph && ensureGraph(); }catch(_){}
+          try{ connectKnownAudio && connectKnownAudio(); }catch(_){}
 
-          try{
-            ensureGraph && ensureGraph();
-          }catch(_){}
-
+          // 値を反映
           try{
             slider.value = String(value);
           }catch(_){}
@@ -2364,6 +2379,13 @@ function setupIOSVolumeSteps(){
 
           try{
             if (typeof cfg.onChange === "function") cfg.onChange(value);
+          }catch(_){}
+
+          // iPhoneで音が戻りにくい時の保険
+          try{
+            if (cfg.label === "bgm" && value > 0 && typeof safeStartBGM === "function"){
+              safeStartBGM(currentBGM());
+            }
           }catch(_){}
 
           // 決定音
@@ -2401,6 +2423,7 @@ function setupIOSVolumeSteps(){
     });
   }catch(_){}
 }
+
 
 try{
   if (document.readyState === "loading"){
