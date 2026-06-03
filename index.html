@@ -1309,17 +1309,17 @@ html.ios #indexModal .vol-toggle{
 </style>
 
 <style>
-/* === iOS専用：音量 小・中・大 ボタン === */
+/* === iOS専用：音量 3段階ボタン === */
 .ios-volume-steps{
   display:none;
 }
 
-/* iPhone：音量セクションをカード状に分けて見やすくする */
+/* 各音量行を横並びカードにする */
 html.ios #indexModal .volume-row{
-  display:flex;
+  display:grid;
+  grid-template-columns: 64px 1fr auto;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
+  gap:8px;
 
   margin:10px 0 0;
   padding:10px 10px 6px;
@@ -1330,16 +1330,24 @@ html.ios #indexModal .volume-row{
   background:rgba(255,255,255,0.035);
 }
 
-/* ON/OFFボタンは少し控えめに */
+/* 左ラベル */
+html.ios #indexModal .volume-text{
+  min-width:0;
+  font-size:13px;
+  text-align:left;
+  opacity:.86;
+}
+
+/* ON/OFFボタンは右端で控えめに */
 html.ios #indexModal .vol-toggle{
-  font-size:14px;
-  padding:9px 12px;
-  min-width:112px;
-  min-height:40px;
+  font-size:12px;
+  padding:7px 10px;
+  min-width:78px;
+  min-height:34px;
   border-radius:999px;
 }
 
-/* 小・中・大ボタンを同じカードの下段に見せる */
+/* 3段階ボタンをカード下段に配置 */
 html.ios #indexModal .ios-volume-steps{
   display:flex;
   justify-content:center;
@@ -1355,39 +1363,34 @@ html.ios #indexModal .ios-volume-steps{
   background:rgba(255,255,255,0.035);
 }
 
+/* 音量ボタン：バー風 */
 .ios-vol-step{
   flex:1;
-  max-width:78px;
+  max-width:74px;
   min-height:40px;
-  font-size:14px;
+
+  font-size:18px;
+  font-weight:800;
   line-height:1;
-  padding:10px 0;
+  padding:9px 0;
 
   border-radius:999px;
-  border:1px solid rgba(255,255,255,0.22);
+  border:1px solid rgba(255,255,255,0.20);
   background:linear-gradient(180deg,#202126,#14151a);
-  color:#f5f7fb;
+  color:rgba(245,247,251,.78);
 
   cursor:pointer;
   user-select:none;
   -webkit-tap-highlight-color:transparent;
 }
 
+/* 選択中 */
 .ios-vol-step.active{
+  color:#ffffff;
   border-color:#4169E1;
   box-shadow:
     0 0 6px rgba(255,255,255,0.35),
     0 0 10px rgba(65,105,225,0.65);
-}
-</style>
-
-
-<style>
-/* Prevent label wrapping/clipping on audio toggle buttons */
-#bgmBtnIndex, #seBtnIndex, #voiceBtnIndex{
-  white-space: nowrap !important;
-  line-height: 1.2 !important;
-  overflow: visible !important;
 }
 </style>
 
@@ -2350,7 +2353,7 @@ function setupIOSVolumeSteps(){
       {
         slider: bgmSlider,
         label: "bgm",
-        values: [["小", 25], ["中", 55], ["大", 90]],
+        values: [["▂", 25], ["▆", 55], ["█", 90]],
         onChange: onBgmSliderChange
       },
       {
