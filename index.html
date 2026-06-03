@@ -2416,7 +2416,7 @@ function setupIOSVolumeSteps(){
 
       btn.addEventListener("click", ()=>{
   try{ userGesture && userGesture(); }catch(_){}
-  try{ ensureGraph && ensureGraph(); }catch(_){}
+  try{ if (typeof window.ensureGraph === "function") window.ensureGraph(); }catch(_){}
   try{ connectKnownAudio && connectKnownAudio(); }catch(_){}
 
   const next = getNextValue(slider.value, cfg.values);
@@ -2593,7 +2593,7 @@ function connectToBus(el, bus){
 function connectKnownAudio(){
   try{
     if (!IS_IOS) return;
-    const g = ensureGraph();
+    const g = (typeof window.ensureGraph === "function") ? window.ensureGraph() : null;
     if (!g) return;
     // BGM要素（2曲）を必ずバスへ
     try{ if (bgm1) connectToBus(bgm1, g.bgm); }catch(_){ }
@@ -7373,6 +7373,9 @@ var REDUCED=false; try{ REDUCED = window.matchMedia && window.matchMedia('(prefe
       return null;
     }
   }
+
+  // ★iOS音量制御用：ensureGraphを外側の音量反映処理から呼べるようにする
+  try{ window.ensureGraph = ensureGraph; }catch(_){}
 
   function unlock(){
     if (unlocked) return;
