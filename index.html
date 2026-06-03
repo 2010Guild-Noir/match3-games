@@ -2358,7 +2358,7 @@ function setupIOSVolumeSteps(){
       {
         slider: bgmSlider,
         label: "bgm",
-        values: [15, 50, 80],
+        values: [15, 50, 90],
         onChange: onBgmSliderChange
       },
       {
@@ -2370,7 +2370,7 @@ function setupIOSVolumeSteps(){
       {
         slider: voiceSlider,
         label: "voice",
-        values: [25, 55, 90],
+        values: [25, 55, 100],
         onChange: onVoiceSliderChange
       }
     ];
@@ -2420,7 +2420,6 @@ function setupIOSVolumeSteps(){
   try{ connectKnownAudio && connectKnownAudio(); }catch(_){}
 
   const next = getNextValue(slider.value, cfg.values);
-  const vol = Math.max(0, Math.min(1, Number(next) / 100));
 
   try{
     slider.value = String(next);
@@ -2430,68 +2429,24 @@ function setupIOSVolumeSteps(){
     if (typeof updateRangeFill === "function") updateRangeFill(slider);
   }catch(_){}
 
-  // iPhone用：音量を確実に反映
+  // 既存の音量変更ルートに一本化する
   try{
-    if (cfg.label === "bgm"){
-      bgmOn = vol > 0;
-      bgmMuted = false;
-
-      store.set("bgmOn", bgmOn);
-      store.set("bgmMuted", false);
-      store.set("bgmVol", vol);
-      if (vol > 0) store.set("bgmLast", vol);
-
-      if (typeof setBGMVol === "function") setBGMVol(vol);
-      if (typeof __applyBgmVolume === "function") __applyBgmVolume();
-      if (typeof onBgmSliderChange === "function") onBgmSliderChange(next);
-
-      if (vol > 0 && typeof safeStartBGM === "function"){
-        safeStartBGM(currentBGM());
-      }
-
-      if (typeof updateBgmIcon === "function") updateBgmIcon(vol);
-    }
-
-    if (cfg.label === "se"){
-      if (typeof Sound !== "undefined" && Sound){
-        Sound.enabled = vol > 0;
-        Sound.vol = vol;
-      }
-
-      store.set("seOn", vol > 0);
-      store.set("seVol", vol);
-      if (vol > 0) store.set("seLastPct", Number(next));
-
-      if (typeof setSEVol === "function") setSEVol(vol);
-      if (typeof __applySeVolume === "function") __applySeVolume();
-      if (typeof onSeSliderChange === "function") onSeSliderChange(next);
-
-      if (typeof updateSeIcon === "function") updateSeIcon(vol);
-    }
-
-    if (cfg.label === "voice"){
-      voiceOn = vol > 0;
-
-      store.set("voiceOn", voiceOn);
-      store.set("voiceVol", vol);
-      if (vol > 0) store.set("voiceLastPct", Number(next));
-
-      if (typeof setVoiceVol === "function") setVoiceVol(vol);
-      if (typeof __applyVoiceVolume === "function") __applyVoiceVolume();
-      if (typeof onVoiceSliderChange === "function") onVoiceSliderChange(next);
-
-      if (typeof updateVoiceIcon === "function") updateVoiceIcon(vol);
-    }
+    if (typeof cfg.onChange === "function") cfg.onChange(next);
   }catch(_){}
 
+  // BGMだけは再生復帰の保険
   try{
-    if (typeof dispatchRangeInput === "function") dispatchRangeInput(slider);
+    if (cfg.label === "bgm" && next > 0 && typeof safeStartBGM === "function"){
+      safeStartBGM(currentBGM());
+    }
   }catch(_){}
 
   refreshButton();
 
-  // 決定音
-  try{ onClickSE(); }catch(_){}
+  // 確認音：SEボタン自身を触った時は onSeSliderChange 内の試聴音に任せる
+  try{
+    if (cfg.label !== "se") onClickSE();
+  }catch(_){}
 });
 
       wrap.appendChild(btn);
