@@ -1339,10 +1339,11 @@ html.ios #indexModal input[type="range"]{
 html.ios #indexModal .vol-toggle{
   width:100%;
   min-width:0;
-  min-height:42px;
-  padding:9px 8px;
+  min-height:46px;
+  padding:10px 8px;
 
-  font-size:14px;
+  font-size:16px;
+  font-weight:700;
   border-radius:999px;
 }
 
@@ -1356,11 +1357,11 @@ html.ios #indexModal .ios-volume-steps{
 /* Vol.▂▆█ ボタン */
 .ios-vol-cycle{
   width:100%;
-  min-height:42px;
-  padding:9px 8px;
+  min-height:46px;
+  padding:10px 8px;
 
-  font-size:14px;
-  font-weight:700;
+  font-size:16px;
+  font-weight:800;
   line-height:1;
   border-radius:999px;
 
@@ -1375,6 +1376,7 @@ html.ios #indexModal .ios-volume-steps{
 
 .ios-vol-cycle .vol-bars{
   color:#33CFFF;
+  font-size:18px;
   letter-spacing:0.08em;
   text-shadow:0 0 6px rgba(51,207,255,0.55);
 }
@@ -2423,16 +2425,65 @@ function setupIOSVolumeSteps(){
         }catch(_){}
 
         try{
-          if (typeof updateRangeFill === "function") updateRangeFill(slider);
-        }catch(_){}
+  if (typeof updateRangeFill === "function") updateRangeFill(slider);
+}catch(_){}
 
-        try{
-          if (typeof dispatchRangeInput === "function") dispatchRangeInput(slider);
-        }catch(_){}
+// iPhone用：Volボタンから音量を直接反映する
+try{
+  const vol = Math.max(0, Math.min(1, Number(next) / 100));
 
-        try{
-          if (typeof cfg.onChange === "function") cfg.onChange(next);
-        }catch(_){}
+  if (cfg.label === "bgm"){
+    bgmOn = true;
+    bgmMuted = false;
+
+    try{ store.set("bgmOn", true); }catch(_){}
+    try{ store.set("bgmMuted", false); }catch(_){}
+    try{ store.set("bgmVol", vol); }catch(_){}
+
+    try{ setBGMVol(vol); }catch(_){}
+    try{ __applyBgmVolume(); }catch(_){}
+
+    try{
+      if (typeof safeStartBGM === "function"){
+        safeStartBGM(currentBGM());
+      }
+    }catch(_){}
+
+    try{ updateBgmIcon(vol); }catch(_){}
+  }
+
+  if (cfg.label === "se"){
+    try{ Sound.enabled = true; }catch(_){}
+
+    try{ store.set("seOn", true); }catch(_){}
+    try{ store.set("seVol", vol); }catch(_){}
+    try{ store.set("seLastPct", Number(next)); }catch(_){}
+
+    try{ setSEVol(vol); }catch(_){}
+    try{ __applySeVolume(); }catch(_){}
+
+    try{ updateSeIcon(vol); }catch(_){}
+  }
+
+  if (cfg.label === "voice"){
+    voiceOn = true;
+
+    try{ store.set("voiceOn", true); }catch(_){}
+    try{ store.set("voiceVol", vol); }catch(_){}
+    try{ store.set("voiceLastPct", Number(next)); }catch(_){}
+
+    try{ setVoiceVol(vol); }catch(_){}
+    try{ __applyVoiceVolume(); }catch(_){}
+
+    try{ updateVoiceIcon(vol); }catch(_){}
+  }
+
+  // 既存のinputイベント系も一応通す
+  try{
+    if (typeof dispatchRangeInput === "function") dispatchRangeInput(slider);
+  }catch(_){}
+
+}catch(_){}
 
         try{
           if (cfg.label === "bgm" && typeof __applyBgmVolume === "function") __applyBgmVolume();
