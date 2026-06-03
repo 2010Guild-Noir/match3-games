@@ -1309,89 +1309,93 @@ html.ios #indexModal .vol-toggle{
 </style>
 
 <style>
-/* === iOS専用：音量 3段階ボタン === */
+/* === iOS専用：音量 サイクルボタン式 === */
 .ios-volume-steps{
   display:none;
 }
 
-/* 各音量行を横並びカードにする */
+/* iPhoneでは「BGM🔊」「Vol.▂▆█」の2ボタン構成にする */
 html.ios #indexModal .volume-row{
   display:grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 1fr 1fr;
   align-items:center;
   gap:8px;
 
-  margin:10px 0 0;
-  padding:10px 10px 6px;
+  margin:8px 0;
+  padding:8px 10px;
 
   border:1px solid rgba(255,255,255,0.10);
-  border-bottom:none;
-  border-radius:14px 14px 0 0;
+  border-radius:14px;
   background:rgba(255,255,255,0.035);
 }
 
-/* 左ラベル */
-html.ios #indexModal .volume-text{
-  min-width:0;
-  font-size:13px;
-  text-align:left;
-  opacity:.86;
+/* iPhoneでは左の説明ラベルとスライダーは隠す */
+html.ios #indexModal .volume-text,
+html.ios #indexModal .slider-hit,
+html.ios #indexModal input[type="range"]{
+  display:none !important;
 }
 
-/* ON/OFFボタンは右端で控えめに */
+/* ON/OFF側ボタン */
 html.ios #indexModal .vol-toggle{
-  font-size:12px;
-  padding:7px 10px;
-  min-width:78px;
-  min-height:34px;
+  width:100%;
+  min-width:0;
+  min-height:42px;
+  padding:9px 8px;
+
+  font-size:14px;
   border-radius:999px;
 }
 
-/* 3段階ボタンをカード下段に配置 */
+/* Vol.ボタンを同じ行に出す */
 html.ios #indexModal .ios-volume-steps{
   display:flex;
-  justify-content:center;
-  gap:8px;
   width:100%;
-
-  margin:0 0 10px;
-  padding:0 10px 10px;
-
-  border:1px solid rgba(255,255,255,0.10);
-  border-top:none;
-  border-radius:0 0 14px 14px;
-  background:rgba(255,255,255,0.035);
+  margin:0;
 }
 
-/* 音量ボタン：バー風 */
-.ios-vol-step{
-  flex:1;
-  max-width:74px;
-  min-height:40px;
+/* Vol.▂▆█ ボタン */
+.ios-vol-cycle{
+  width:100%;
+  min-height:42px;
+  padding:9px 8px;
 
-  font-size:18px;
-  font-weight:800;
+  font-size:14px;
+  font-weight:700;
   line-height:1;
-  padding:9px 0;
-
   border-radius:999px;
-  border:1px solid rgba(255,255,255,0.20);
+
+  border:1px solid rgba(255,255,255,0.22);
   background:linear-gradient(180deg,#202126,#14151a);
-  color:rgba(245,247,251,.78);
+  color:#f5f7fb;
 
   cursor:pointer;
   user-select:none;
   -webkit-tap-highlight-color:transparent;
 }
 
-/* 選択中 */
-.ios-vol-step.active{
-  color:#ffffff;
+.ios-vol-cycle .vol-bars{
+  color:#33CFFF;
+  letter-spacing:0.08em;
+  text-shadow:0 0 6px rgba(51,207,255,0.55);
+}
+.ios-vol-cycle .vol-label{
+  margin-left:2px;
+  margin-right:3px;
+  color:#f5f7fb;
+  font-weight:700;
+}
+
+
+/* 押した時・選択中っぽい発光 */
+.ios-vol-cycle:active,
+.ios-vol-cycle.active{
   border-color:#4169E1;
   box-shadow:
     0 0 6px rgba(255,255,255,0.35),
     0 0 10px rgba(65,105,225,0.65);
 }
+
 </style>
 
 
@@ -2346,116 +2350,113 @@ function setupIOSVolumeSteps(){
     const isIOSNow = !!window.IS_IOS || document.documentElement.classList.contains("ios");
     if (!isIOSNow) return;
 
-    // 念のため、iOS判定がtrueならclassも付ける
     document.documentElement.classList.add("ios");
 
     const configs = [
       {
         slider: bgmSlider,
         label: "bgm",
-        values: [["▂", 25], ["▆", 55], ["█", 90]],
+        values: [15, 50, 80],
         onChange: onBgmSliderChange
       },
       {
         slider: seSlider,
         label: "se",
-        values: [["小", 25], ["中", 55], ["大", 90]],
+        values: [20, 50, 85],
         onChange: onSeSliderChange
       },
       {
         slider: voiceSlider,
         label: "voice",
-        values: [["小", 25], ["中", 55], ["大", 90]],
+        values: [25, 55, 90],
         onChange: onVoiceSliderChange
       }
     ];
+
+    function getBars(value){
+  const v = Number(value || 0);
+  if (v < 40) return { label:"小", bars:"▂" };
+  if (v < 75) return { label:"中", bars:"▂▆" };
+  return { label:"大", bars:"▂▆█" };
+}
+
+    function getNextValue(current, values){
+      const v = Number(current || 0);
+      if (v < 40) return values[1];   // 小 → 中
+      if (v < 75) return values[2];   // 中 → 大
+      return values[0];               // 大 → 小
+    }
 
     configs.forEach(cfg=>{
       const slider = cfg.slider;
       if (!slider) return;
 
       const row = slider.closest(".volume-row");
-      if (!row || !row.parentNode) return;
+      if (!row) return;
 
       // 二重生成防止
-      if (row.parentNode.querySelector(`.ios-volume-steps[data-for="${cfg.label}"]`)) return;
+      if (row.querySelector(`.ios-volume-steps[data-for="${cfg.label}"]`)) return;
 
       const wrap = document.createElement("div");
       wrap.className = "ios-volume-steps";
       wrap.dataset.for = cfg.label;
 
-      cfg.values.forEach(([text, value])=>{
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "ios-vol-step";
-        btn.textContent = text;
-        btn.dataset.value = String(value);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ios-vol-cycle active";
 
-        btn.addEventListener("click", ()=>{
-          try{ userGesture && userGesture(); }catch(_){}
-          try{ ensureGraph && ensureGraph(); }catch(_){}
-          try{ connectKnownAudio && connectKnownAudio(); }catch(_){}
+      function refreshButton(){
+  const vol = getBars(slider.value);
+  btn.innerHTML = `Vol.<span class="vol-label">${vol.label}</span><span class="vol-bars">${vol.bars}</span>`;
+}
 
-          // 値を反映
-          try{
-            slider.value = String(value);
-          }catch(_){}
+      refreshButton();
 
-          try{
-            if (typeof updateRangeFill === "function") updateRangeFill(slider);
-          }catch(_){}
+      btn.addEventListener("click", ()=>{
+        try{ userGesture && userGesture(); }catch(_){}
+        try{ ensureGraph && ensureGraph(); }catch(_){}
+        try{ connectKnownAudio && connectKnownAudio(); }catch(_){}
 
-          try{
-            if (typeof cfg.onChange === "function") cfg.onChange(value);
-          }catch(_){}
+        const next = getNextValue(slider.value, cfg.values);
 
-          // iPhoneで音が戻りにくい時の保険
-          try{
-            if (cfg.label === "bgm" && value > 0 && typeof safeStartBGM === "function"){
-              safeStartBGM(currentBGM());
-            }
-          }catch(_){}
+        try{
+          slider.value = String(next);
+        }catch(_){}
 
-          // 決定音
-          try{ onClickSE(); }catch(_){}
+        try{
+          if (typeof updateRangeFill === "function") updateRangeFill(slider);
+        }catch(_){}
 
-          // active表示更新
-          try{
-            wrap.querySelectorAll(".ios-vol-step").forEach(b=>b.classList.remove("active"));
-            btn.classList.add("active");
-          }catch(_){}
-        });
+        try{
+          if (typeof cfg.onChange === "function") cfg.onChange(next);
+        }catch(_){}
 
-        wrap.appendChild(btn);
+        // BGMがONなら、音量変更後に再開保険
+        try{
+          if (cfg.label === "bgm" && next > 0 && typeof safeStartBGM === "function"){
+            safeStartBGM(currentBGM());
+          }
+        }catch(_){}
+
+        refreshButton();
+
+        // 決定音
+        try{ onClickSE(); }catch(_){}
       });
 
-      row.insertAdjacentElement("afterend", wrap);
+      wrap.appendChild(btn);
 
-      // 初期active表示
-      try{
-        const current = Number(slider.value || 0);
-        let nearest = null;
-        let diff = Infinity;
-
-        wrap.querySelectorAll(".ios-vol-step").forEach(btn=>{
-          const v = Number(btn.dataset.value);
-          const d = Math.abs(v - current);
-          if (d < diff){
-            diff = d;
-            nearest = btn;
-          }
-        });
-
-        if (nearest) nearest.classList.add("active");
-      }catch(_){}
+      // 既存のvolume-row内に入れる。これで「ON/OFF」と横並びになる
+      row.appendChild(wrap);
     });
   }catch(_){}
 }
 
-
 try{
   if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", ()=>setTimeout(setupIOSVolumeSteps, 100));
+    document.addEventListener("DOMContentLoaded", ()=>{
+      setTimeout(setupIOSVolumeSteps, 100);
+    }, { once:true });
   } else {
     setTimeout(setupIOSVolumeSteps, 100);
   }
