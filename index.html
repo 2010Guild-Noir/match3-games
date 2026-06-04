@@ -1673,6 +1673,30 @@ html.ios #indexModal .ios-volume-steps{
     return await res.json();
   }
 
+  // ★称号MAX到達をApps Scriptへ報告
+  async function reportTitleComplete(){
+    try{
+      const pass = localStorage.getItem("supporter_player_id_v1");
+      if (!pass) return;
+
+      // 同じ端末から何度も報告しない
+      const alreadyReported = localStorage.getItem("title_complete_reported_v1");
+      if (alreadyReported === "1") return;
+
+      const data = await apiPost({
+        action: "complete",
+        passcode: pass,
+        title: "永遠の観測者"
+      });
+
+      if (data && data.ok){
+        localStorage.setItem("title_complete_reported_v1", "1");
+      }
+    }catch(e){
+      console.warn("complete report failed", e);
+    }
+  }I
+
   async function unlock(){
     setMsg("", "");
     const raw = document.getElementById("passcode")?.value || "";
@@ -3782,7 +3806,7 @@ const JUSO_BREAK_POINTS = {
   J_SHI: 30,
   J_PRO: 50
 };
-const RANK_THRESH = [20, 100, 300, 500, 700];//ランクアップ闘値
+const RANK_THRESH = [20, 100, 300, 500, 888];//ランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 20, "S_NE0": 30, "S_SHU": 40, "S_REQ": 50, "S_UNK": 80 };
 const SHUFFLE_PENALTY = 50; // 盤面詰みシャッフル時の暗躍値ペナルティ
 const SPECIAL_MAP = {
@@ -4384,6 +4408,9 @@ if (currentTitle === "称号：永遠の観測者(MAX)" && !hasReachedMaxTitle){
   hasReachedMaxTitle = true;
   try{ store.set("hasReachedMaxTitle", true); }catch(_){}
   try{ playMaxTitleCeremony(); }catch(_){}
+
+  // ★Apps Scriptへ称号MAX到達を報告
+  try{ reportTitleComplete(); }catch(_){}
 }
 
 // 永続
