@@ -119,7 +119,7 @@
       cursor:pointer;
       font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
       letter-spacing:0;
-    }
+      }
     #clearBtnWrap .smallbtn:hover{ background:#2a2a3a; }
 
     /* ===== Unlock FX overlay (full-screen white only) ===== */
@@ -195,6 +195,7 @@ if (window.IS_IOS) { document.documentElement.classList.add('ios'); }
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
 <style>
 html{ margin:0; padding:0; height:100%; }
 
@@ -833,9 +834,6 @@ html, body{
 }
 
 
-
-
-
 /* スキル演出用：中央出現アニメーション */
 .skill-overlay {
   position: fixed;
@@ -1414,6 +1412,348 @@ html.ios #indexModal .ios-volume-steps{
   transform:translate(-50%, -50%) !important;
 }
 </style>
+<style>
+/* === 修羅王丸ランクアップ演出：覚醒文字 === */
+.rankup-awaken-text{
+  position:fixed;
+  left:0;
+  right:0;
+
+  top:calc(var(--skill-cy, 50vh) - clamp(120px, 26vw, 172px));
+  transform:translateY(-50%) scale(.96);
+
+  z-index:30002;
+  pointer-events:none;
+
+  width:100vw;
+  max-width:100vw;
+  box-sizing:border-box;
+  padding:0 4px;
+  text-align:center;
+
+  white-space:nowrap;
+  word-break:keep-all;
+  overflow:visible;
+
+  font-family:
+    "Yuji Syuku",
+    "HGS行書体",
+    "HGP行書体",
+    "Yu Mincho",
+    "Hiragino Mincho ProN",
+    "Noto Serif JP",
+    serif;
+
+  font-size:clamp(42px, 10.8vw, 88px) !important;
+  font-weight:900;
+  letter-spacing:-.08em;
+
+
+  /* 白い筆文字＋外側風の黒縁＋赤青の禍々しい発光 */
+color:#fff6e8;
+background:none;
+-webkit-background-clip:initial;
+background-clip:initial;
+-webkit-text-fill-color:#fff6e8;
+
+/* text-strokeは内側を潰すので使わない */
+-webkit-text-stroke:0 transparent;
+
+text-shadow:
+  /* 外側風の黒縁 */
+  1px 0 0 rgba(0,0,0,1),
+  -1px 0 0 rgba(0,0,0,1),
+  0 1px 0 rgba(0,0,0,1),
+  0 -1px 0 rgba(0,0,0,1),
+  1px 1px 0 rgba(0,0,0,.95),
+  -1px 1px 0 rgba(0,0,0,.95),
+  1px -1px 0 rgba(0,0,0,.95),
+  -1px -1px 0 rgba(0,0,0,.95),
+
+  /* 赤い怨念光 */
+  0 0 6px rgba(255,40,40,.95),
+  0 0 13px rgba(170,0,0,.85),
+
+  /* 青い修羅光 */
+  0 0 22px rgba(65,105,225,.78),
+
+  /* 奥の黒影 */
+  0 0 36px rgba(0,0,0,.95);
+
+  opacity:0;
+  filter:blur(2px) contrast(1.2);
+  animation:rankupAwakenText 2.35s ease-out forwards;
+}
+
+.rankup-awaken-text::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:54%;
+  width:min(92vw, 540px);
+  height:56%;
+  transform:translate(-50%, -50%);
+  background:
+    radial-gradient(ellipse at center,
+      rgba(180,0,0,.44) 0%,
+      rgba(0,0,0,.42) 42%,
+      rgba(30,55,200,.30) 62%,
+      transparent 78%
+    );
+  filter:blur(10px);
+  z-index:-1;
+}
+
+.rankup-awaken-text::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:68%;
+  width:min(72vw, 390px);
+  height:3px;
+  transform:translateX(-50%);
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(90,0,0,.95),
+      rgba(255,0,0,.95),
+      rgba(65,105,225,.95),
+      transparent
+    );
+  box-shadow:
+    0 0 8px rgba(255,0,0,.8),
+    0 0 18px rgba(65,105,225,.7),
+    0 0 28px rgba(0,0,0,1);
+  z-index:-1;
+}
+
+@keyframes rankupAwakenText{
+  0%{
+    opacity:0;
+    transform:translateY(-50%) scale(.80) rotate(-1deg);
+    filter:blur(4px) contrast(1.1);
+  }
+  12%{
+    opacity:1;
+    transform:translateY(-50%) scale(1.08) rotate(.5deg);
+    filter:blur(0) contrast(1.25);
+  }
+  74%{
+    opacity:1;
+    transform:translateY(-50%) scale(1.0) rotate(0deg);
+    filter:blur(0) contrast(1.18);
+  }
+  100%{
+    opacity:0;
+    transform:translateY(-62%) scale(1.05) rotate(.8deg);
+    filter:blur(2px) contrast(1.15);
+  }
+}
+</style>
+
+<style>
+/* === 闘値MAX到達演出：永遠の焦土 === */
+#finalRankMaxCeremony{
+  position:fixed;
+  inset:0;
+  z-index:39000;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:
+    radial-gradient(circle at center, rgba(65,105,225,.22), rgba(0,0,0,.90) 68%),
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(105,0,0,.28));
+
+  opacity:0;
+  animation:finalMaxBgIn 4.8s ease-out forwards;
+}
+
+#finalRankMaxCeremony.out{
+  opacity:0;
+  transition:opacity .9s ease-out;
+}
+
+#finalRankMaxCeremony .final-max-stage{
+  position:relative;
+  width:min(92vw, 430px);
+  height:min(92vw, 430px);
+  transform:scale(.86);
+  opacity:0;
+  animation:finalMaxStageIn 4.2s ease-out forwards;
+}
+
+/* 中央エンブレム：5体より下のレイヤー */
+#finalRankMaxCeremony .final-max-emblem{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:clamp(118px, 34vw, 190px);
+  height:clamp(118px, 34vw, 190px);
+  transform:translate(-50%, -50%) scale(.86);
+  object-fit:contain;
+  z-index:1;
+
+  opacity:.52;
+  filter:
+    drop-shadow(0 0 10px rgba(255,40,40,.65))
+    drop-shadow(0 0 20px rgba(65,105,225,.62))
+    drop-shadow(0 0 36px rgba(0,0,0,1));
+  animation:finalMaxEmblemPulse 3.8s ease-in-out infinite;
+}
+
+/* 五角形に並ぶ修羅王丸5種 */
+#finalRankMaxCeremony .final-max-rank{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:clamp(70px, 18vw, 112px);
+  height:clamp(70px, 18vw, 112px);
+  object-fit:contain;
+  z-index:2;
+
+  opacity:0;
+  filter:
+    drop-shadow(0 0 9px rgba(255,255,255,.35))
+    drop-shadow(0 0 18px rgba(255,40,40,.54))
+    drop-shadow(0 0 22px rgba(65,105,225,.48))
+    drop-shadow(0 0 28px rgba(0,0,0,1));
+
+  animation:finalMaxRankIn 3.6s ease-out forwards;
+}
+
+/* 上 */
+#finalRankMaxCeremony .final-max-rank.r0{
+  transform:translate(-50%, -50%) translate(0, -150%) scale(.92);
+  animation-delay:.10s;
+}
+
+/* 右上 */
+#finalRankMaxCeremony .final-max-rank.r1{
+  transform:translate(-50%, -50%) translate(130%, -48%) scale(.92);
+  animation-delay:.20s;
+}
+
+/* 右下 */
+#finalRankMaxCeremony .final-max-rank.r2{
+  transform:translate(-50%, -50%) translate(82%, 118%) scale(.92);
+  animation-delay:.30s;
+}
+
+/* 左下 */
+#finalRankMaxCeremony .final-max-rank.r3{
+  transform:translate(-50%, -50%) translate(-82%, 118%) scale(.92);
+  animation-delay:.40s;
+}
+
+/* 左上 */
+#finalRankMaxCeremony .final-max-rank.r4{
+  transform:translate(-50%, -50%) translate(-130%, -48%) scale(.92);
+  animation-delay:.50s;
+}
+
+#finalRankMaxCeremony .final-max-title{
+  position:absolute;
+  left:50%;
+  bottom:clamp(8px, 3vw, 18px);
+  transform:translateX(-50%);
+  z-index:3;
+
+  width:100%;
+  text-align:center;
+  white-space:nowrap;
+
+  font-family:
+    "Yuji Syuku",
+    "HGS行書体",
+    "HGP行書体",
+    "Yu Mincho",
+    "Hiragino Mincho ProN",
+    "Noto Serif JP",
+    serif;
+
+  font-size:clamp(38px, 10vw, 78px);
+  font-weight:900;
+  letter-spacing:.04em;
+  color:#fff6e8;
+  -webkit-text-fill-color:#fff6e8;
+  -webkit-text-stroke:0 transparent;
+
+  text-shadow:
+    1px 0 0 rgba(0,0,0,1),
+    -1px 0 0 rgba(0,0,0,1),
+    0 1px 0 rgba(0,0,0,1),
+    0 -1px 0 rgba(0,0,0,1),
+    0 0 6px rgba(255,255,255,.85),
+    0 0 12px rgba(255,40,40,.85),
+    0 0 22px rgba(65,105,225,.82),
+    0 0 42px rgba(0,0,0,1);
+
+  opacity:0;
+  animation:finalMaxTitleIn 4.2s ease-out forwards;
+  animation-delay:.62s;
+}
+
+#finalRankMaxCeremony .final-max-ring{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:72%;
+  height:72%;
+  border-radius:50%;
+  transform:translate(-50%, -50%) scale(.72);
+  z-index:0;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:
+    0 0 22px rgba(255,30,30,.45),
+    0 0 36px rgba(65,105,225,.45),
+    0 0 80px rgba(0,0,0,1) inset;
+  opacity:0;
+  animation:finalMaxRing 4.2s ease-out forwards;
+}
+
+@keyframes finalMaxBgIn{
+  0%{ opacity:0; }
+  18%{ opacity:1; }
+  78%{ opacity:1; }
+  100%{ opacity:1; }
+}
+
+@keyframes finalMaxStageIn{
+  0%{ opacity:0; transform:scale(.72); filter:blur(4px); }
+  18%{ opacity:1; transform:scale(1.03); filter:blur(0); }
+  72%{ opacity:1; transform:scale(1.0); }
+  100%{ opacity:1; transform:scale(1.02); }
+}
+
+@keyframes finalMaxRankIn{
+  0%{ opacity:0; filter:blur(5px); }
+  22%{ opacity:1; filter:blur(0); }
+  78%{ opacity:1; }
+  100%{ opacity:1; }
+}
+
+@keyframes finalMaxTitleIn{
+  0%{ opacity:0; transform:translateX(-50%) translateY(12px) scale(.82); filter:blur(4px); }
+  24%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1.08); filter:blur(0); }
+  76%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1.0); }
+  100%{ opacity:1; transform:translateX(-50%) translateY(-2px) scale(1.03); }
+}
+
+@keyframes finalMaxRing{
+  0%{ opacity:0; transform:translate(-50%, -50%) scale(.58) rotate(0deg); }
+  28%{ opacity:.9; }
+  100%{ opacity:.2; transform:translate(-50%, -50%) scale(1.28) rotate(25deg); }
+}
+
+@keyframes finalMaxEmblemPulse{
+  0%,100%{ opacity:.48; transform:translate(-50%, -50%) scale(.86); }
+  50%{ opacity:.72; transform:translate(-50%, -50%) scale(.94); }
+}
+</style>
+
 <style>
 /* === 暗躍値称号MAX到達演出：永遠の観測者 === */
 #maxTitleCeremony{
@@ -3283,6 +3623,8 @@ const IMG = {
   "PATH_J_NEM": "images/nemu.png",
   "PATH_J_SHI": "images/shinjuro.png",
   "PATH_J_PRO": "images/propaganda.png",
+　"MAX_EMBLEM": new Image(),
+"PATH_MAX_EMBLEM": "images/max_emblem.png",
   "BG": new Image(), "PATH_BG": "images/boad_bg.png"
 };
 
@@ -3806,7 +4148,7 @@ const JUSO_BREAK_POINTS = {
   J_SHI: 30,
   J_PRO: 50
 };
-const RANK_THRESH = [20, 100, 300, 500, 888];//ランクアップ闘値
+const RANK_THRESH = [5, 5, 5, 5, 5];//アンノウン到達までのランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 20, "S_NE0": 30, "S_SHU": 40, "S_REQ": 50, "S_UNK": 80 };
 const SHUFFLE_PENALTY = 50; // 盤面詰みシャッフル時の暗躍値ペナルティ
 const SPECIAL_MAP = {
@@ -3975,6 +4317,279 @@ try{ window.__pendingComboVoiceOnSkillEnd = null; }catch(_){}
   }catch(_){}
 }
 
+function playRankUpAwakenCeremony(){
+  try{
+    // 既存スキル演出と同じ中央位置を使う
+    try{
+      if (typeof setSkillCenterToBoard === "function"){
+        setSkillCenterToBoard();
+      }
+    }catch(_){}
+
+    const overlay = document.getElementById("skill-overlay");
+    const img = document.getElementById("skill-character");
+
+    if (overlay){
+      overlay.classList.remove("fadeout");
+      overlay.classList.add("active", "mode-shodo");
+    }
+
+    if (img){
+  // ★ランクアップ後の修羅王丸ランク画像を表示する
+  try{
+    const newRankKey = RANKS[rankIndex].key;
+
+    if (typeof IMG !== "undefined" && IMG[newRankKey] && IMG[newRankKey].src){
+      img.src = IMG[newRankKey].src;
+    }
+  }catch(_){}
+
+  img.alt = "";
+  img.style.opacity = "";
+  img.style.transform = "";
+}
+
+    // 既存の覚醒文字が残っていたら消す
+    try{
+      document.querySelectorAll(".rankup-awaken-text").forEach(el=>el.remove());
+    }catch(_){}
+
+    const text = document.createElement("div");
+    text.className = "rankup-awaken-text";
+    text.textContent = "修羅王丸 覚醒";
+    document.body.appendChild(text);
+
+    // 少し見せてからフェードアウト
+    setTimeout(()=>{
+      try{
+        if (overlay) overlay.classList.add("fadeout");
+      }catch(_){}
+    }, 1100);
+
+    setTimeout(()=>{
+      try{
+        if (overlay) overlay.classList.remove("active", "fadeout", "mode-shodo");
+      }catch(_){}
+      try{ text.remove(); }catch(_){}
+    }, 1750);
+
+  }catch(_){}
+}
+
+function getRankUpDelayAfterSkill(){
+  let delay = 0;
+
+  try{
+    if (typeof skillVoiceBusyUntil !== "undefined" && typeof nowMs === "function"){
+      delay = Math.max(delay, skillVoiceBusyUntil - nowMs() + 80);
+    }
+  }catch(_){}
+
+  try{
+    const el = window.__skillVoiceElement || null;
+    if (el && !el.paused && !el.ended){
+      let remain = 0;
+
+      if (Number.isFinite(el.duration) && Number.isFinite(el.currentTime)){
+        remain = Math.max(0, (el.duration - el.currentTime) * 1000);
+      } else {
+        remain = 1400;
+      }
+
+      delay = Math.max(delay, remain + 80);
+    }
+  }catch(_){}
+
+  // ★スキルカットイン演出がまだ表示中なら、見せ切ってからランクアップへ
+  try{
+    const now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    const cutinUntil = Number(window.__shuraSkillCutinUntil || 0);
+    if (cutinUntil > now){
+      delay = Math.max(delay, cutinUntil - now + 180);
+    }
+  }catch(_){}
+
+
+  // 待ちすぎ防止
+  delay = Math.max(0, Math.min(5200, delay));
+
+  return delay;
+}
+
+function runPendingRankUpAwakenAfterDrop(){
+  try{
+    if (!window.__pendingRankUpAwaken) return;
+    if (window.__rankUpAwakenRunning) return;
+
+    window.__pendingRankUpAwaken = false;
+    window.__rankUpAwakenRunning = true;
+
+    // この間だけ操作・連鎖ボイスを抑制
+    try{ startRankPriority(5600); }catch(_){}
+
+    // 覚醒演出開始
+    try{ playRankUpAwakenCeremony(); }catch(_){}
+
+    // 既存のランクアップVOICE・鐘SE
+    try{
+      const idx = Number(window.__pendingRankUpIndex || rankIndex || 0);
+      const vId = `vo_rank${Math.min(idx,4)}`;
+      window.playVoiceById && window.playVoiceById(vId);
+    }catch(_){}
+
+    try{ Sound.play('bell', 1.0); }catch(_){}
+
+    // 覚醒演出を見せたあと、ランクアップ報酬の盤面全消しへ
+    setTimeout(()=>{
+      try{
+        if (window.__pendingRankUpFullClear){
+          const all = new Set();
+
+          for(let r=0;r<size;r++){
+            for(let c=0;c<size;c++){
+              if(get(r,c)!==null) all.add(`${r},${c}`);
+            }
+          }
+
+          window.__pendingRankUpFullClear = false;
+
+          if(all.size>0){
+            // ★ランクアップ全消しでは、巻き込まれた特殊駒のスキルカットインを出さない
+            window.__rankUpFullClearVanish = true;
+
+            vanishMask = all;
+            animState = "vanish";
+            vanishP = 0;
+            lastMatchVH.v = true;
+            lastMatchVH.h = false;
+            createSlashEffects(all);
+
+            setTimeout(()=>{
+              try{ window.__rankUpFullClearVanish = false; }catch(_){}
+            }, 1400);
+          }else{
+            animState = "idle";
+          }
+        }else{
+          animState = "idle";
+        }
+      }catch(_){
+        animState = "idle";
+      }
+
+      setTimeout(()=>{
+        try{ window.__rankUpAwakenRunning = false; }catch(_){}
+      }, 5200);
+
+    }, 1550);
+
+  }catch(_){
+    try{ window.__rankUpAwakenRunning = false; }catch(_){}
+    try{ animState = "idle"; }catch(_){}
+  }
+}
+
+function playFinalRankMAXCeremony(){
+  try{
+    // maybeReachMax() 内で window版とローカル版の両方から呼ばれるため二重発火防止
+    if (window.__finalRankMaxCeremonyRunning) return;
+    window.__finalRankMaxCeremonyRunning = true;
+
+    // 既存が残っていたら消す
+    try{
+      document.querySelectorAll("#finalRankMaxCeremony").forEach(el => el.remove());
+    }catch(_){}
+
+    // ランクMAX演出中は他演出を少し抑制
+    try{
+      if (typeof startRankPriority === "function") startRankPriority(5600);
+    }catch(_){}
+
+    // SE：se_bell.mp3 を明示的に鳴らす
+    try{
+      if (typeof Sound !== "undefined" && Sound.play){
+        Sound.play("bell", 1.0);
+      }else{
+        const bell = document.getElementById("se_bell");
+        if (bell){
+          try{ bell.currentTime = 0; }catch(_){}
+          const p = bell.play();
+          if (p && p.catch) p.catch(()=>{});
+        }
+      }
+    }catch(_){}
+
+    const root = document.createElement("div");
+    root.id = "finalRankMaxCeremony";
+
+    const stage = document.createElement("div");
+    stage.className = "final-max-stage";
+
+    const ring = document.createElement("div");
+    ring.className = "final-max-ring";
+
+    const emblem = document.createElement("img");
+    emblem.className = "final-max-emblem";
+    if (typeof IMG !== "undefined" && IMG.MAX_EMBLEM && IMG.MAX_EMBLEM.src){
+  emblem.src = IMG.MAX_EMBLEM.src;
+}else{
+  emblem.src = "images/max_emblem.png";
+}
+    emblem.alt = "";
+
+    stage.appendChild(ring);
+    stage.appendChild(emblem);
+
+    // 修羅王丸5種：RANKSの5キーをそのまま使う。五角形の並び
+    const keys = (typeof RANKS !== "undefined" && Array.isArray(RANKS))
+      ? RANKS.map(r => r.key)
+      : ["S_UNK", "S_REQ", "S_BIR", "S_NE0", "S_SHU"];
+
+    keys.slice(0, 5).forEach((key, i)=>{
+      try{
+        const img = document.createElement("img");
+        img.className = "final-max-rank r" + i;
+
+        if (typeof IMG !== "undefined" && IMG[key] && IMG[key].src){
+          img.src = IMG[key].src;
+        }else{
+          img.src = "images/" + key + ".png";
+        }
+ｓｓ
+        img.alt = "";
+        stage.appendChild(img);
+      }catch(_){}
+    });
+
+    const title = document.createElement("div");
+    title.className = "final-max-title";
+    title.textContent = "永遠の焦土";
+    stage.appendChild(title);
+
+    root.appendChild(stage);
+    document.body.appendChild(root);
+
+    // 表示後フェードアウト
+    setTimeout(()=>{
+      try{ root.classList.add("out"); }catch(_){}
+    }, 4800);
+
+    setTimeout(()=>{
+      try{ root.remove(); }catch(_){}
+      try{ window.__finalRankMaxCeremonyRunning = false; }catch(_){}
+    }, 5900);
+
+  }catch(_){
+    try{ window.__finalRankMaxCeremonyRunning = false; }catch(__){}
+  }
+}
+
+// window側にも必ず載せる
+try{
+  window.playFinalRankMAXCeremony = playFinalRankMAXCeremony;
+}catch(_){}
+
+
 function resetComboForNewMove(){
   comboCount = 0;
   auroraTriggeredThisMove = false; // 一手ごとにオーロラ発動フラグをリセット
@@ -4125,11 +4740,11 @@ function getComboInfo(n){
 function getTitleByScore(s){
    if (s < 1000) return "称号：名も無き欠片(1/8)";
   if (s < 5000) return "称号：影の放浪者(2/8)";
-  if (s < 20000) return "称号：業火の修験者(3/8)";
-  if (s < 50000) return "称号：比良坂の防人(4/8)";
-  if (s < 100000) return "称号：黄昏の審問官(5/8)";
-  if (s < 300000) return "称号：血煙の傍観者(6/8)";
-  if (s < 1000000) return "称号：無明の支配者(7/8)";
+  if (s < 10000) return "称号：業火の修験者(3/8)";
+  if (s < 20000) return "称号：比良坂の防人(4/8)";
+  if (s < 30000) return "称号：黄昏の審問官(5/8)";
+  if (s < 40000) return "称号：血煙の傍観者(6/8)";
+  if (s < 50000) return "称号：無明の支配者(7/8)";
   return "称号：永遠の観測者(MAX)";
 }
 
@@ -4562,11 +5177,14 @@ function findMatches(checkOnly=true){ /* (省略: 変更なし) */
 /* ランク進捗・ボイス (省略: 変更なし) */
 function updateRank(){ /* (省略: 変更なし) */
   if(rankIndex<MAX_RANK_INDEX && rankProgress>=RANK_THRESH[rankIndex]){
-    rankProgress=0; rankIndex++;
+    rankProgress=0;
+    rankIndex++;
+
     // ランクアップしたので、直後のコンボ技ボイスを抑制
     if (typeof suppressComboVoice !== 'undefined') {
       suppressComboVoice = true;
     }
+
     /* ensure Unknown gate resets */
     try{
       if (typeof MAX_RANK_INDEX!=='undefined' && rankIndex===MAX_RANK_INDEX){
@@ -4575,22 +5193,26 @@ function updateRank(){ /* (省略: 変更なし) */
         if (typeof hasReachedMaxRank!=='undefined' && !hasReachedMaxRank){
           if (typeof unknownStageProgress!=='number') unknownStageProgress = 0;
           else unknownStageProgress = 0;
+
           try{
             if (typeof store!=='undefined' && store.set) store.set('unknownStageProgress', 0);
           }catch(_){}
         }
-        // すでに hasReachedMaxRank が true の場合は、何もリセットしない（アイコンを消さない）
+
+        // すでに hasReachedMaxRank が true の場合は、何もリセットしない
       }
     }catch(_){}
-    // ★ランクアップ演出を最優先にする
-try{ startRankPriority(1900); }catch(_){}
 
-const vId = `vo_rank${Math.min(rankIndex,4)}`;
-try{ window.playVoiceById && window.playVoiceById(vId); }catch(_){ }
-Sound.play('bell', 1.0); // ランクアップ時、鐘を同時再生
+    // ★ランクアップ演出は、消去・落下が終わってから再生する
+    try{
+      window.__pendingRankUpAwaken = true;
+      window.__pendingRankUpFullClear = true;
+      window.__pendingRankUpIndex = rankIndex;
+    }catch(_){}
+
+    // juso_spawn 解放は実際の出現時に行う（ランク到達では行わない）
+    updateScoresUI();
   }
-  // juso_spawn 解放は実際の出現時に行う（ランク到達では行わない）
-  updateScoresUI();
 }
 
 /* 消去→落下 (省略: 変更なし) */
@@ -4601,7 +5223,7 @@ function addCell(set, r, c){ /* (省略: 変更なし) */
 }
 function applySpecialGimmicks(baseMatches){
   // 特殊駒ギミックの消去範囲を追加する。
-  // 要件：ミミック/ネオレトロ/レクイエムは「移動した駒（到達先）」を中心に発動し、
+  // 要件：ミミック/ネオレトロ/レクsイエムは「移動した駒（到達先）」を中心に発動し、
   // マッチ内に複数の特殊駒が含まれても列/行が過剰に増えないようにする。
   const extra = new Set();
 
@@ -4720,7 +5342,7 @@ overlay.classList.add('active');
   // ★スキルボイス優先時間。
 // 実音声の長さを完全取得できない環境もあるため、まずは固定値で安全に待つ。
 try{
-  skillVoiceBusyUntil = nowMs() + 3200;
+  skillVoiceBusyUntil = nowMs() + 5100;
 }catch(_){}
 
 // ★スキルボイス要素を記録して、連鎖ボイスは ended 後に回す
@@ -5037,30 +5659,27 @@ if (comboBonus > 0) {
   }
 
   const prevRank = rankIndex;
-  updateRank();
+updateRank();
 
-  if(rankIndex > prevRank){
-    const all = new Set();
-    for(let r=0;r<size;r++){
-      for(let c=0;c<size;c++){
-        if(get(r,c)!==null) all.add(`${r},${c}`);
-      }
-    }
-    if(all.size>0){
-      vanishMask = all;
-      animState = "vanish";
-      vanishP = 0;
-      lastMatchVH.v = true;
-      lastMatchVH.h = false;
-      createSlashEffects(all);
-      return;
-    }
-  }
+if(rankIndex > prevRank){
+  // ★ここでは全消ししない。
+  // 通常の消去→落下→連鎖処理を先に進め、落下完了後に覚醒演出へ移る。
+  try{
+    window.__pendingRankUpAwaken = true;
+    window.__pendingRankUpFullClear = true;
+    window.__pendingRankUpIndex = rankIndex;
+  }catch(_){}
+}
 
-  vanishMask = null;
-  prepareDrop();
-  animState = "drop";
-  maybeSpawnObstacles();
+// ★暗躍値・闘値の表示を消去処理ごとに即時更新する
+try{
+  if (typeof updateScoresUI === "function") updateScoresUI();
+}catch(_){}
+
+vanishMask = null;
+prepareDrop();
+animState = "drop";
+maybeSpawnObstacles();
 }
 
 /* ★クッション落下用の速度配列と定数 (省略: 変更なし) */
@@ -6618,8 +7237,9 @@ const isShuraItemBoostVanish =
   lastShuraItemKind === "REKUSHURA" ||
   (typeof lastRekCrossCombo !== "undefined" && lastRekCrossCombo) ||
   (typeof rekCrossStage !== "undefined" && rekCrossStage > 0);
+const isRankUpFullClearVanish = !!window.__rankUpFullClearVanish;
 
-if (!isShuraItemBoostVanish) {
+if (!isShuraItemBoostVanish && !isRankUpFullClearVanish) {
   for(let pos of vanishMask) {
     let [r, c] = pos.split(',').map(Number);
     let sym = get(r, c);
@@ -6667,7 +7287,25 @@ if (!isShuraItemBoostVanish) {
           isCascadeMatch = false;
           animState="vanish";
         }
-        else { animState="idle"; endComboIfAny(); }
+        else {
+  endComboIfAny();
+
+  if (window.__pendingRankUpAwaken && typeof runPendingRankUpAwakenAfterDrop === "function"){
+  const wait = (typeof getRankUpDelayAfterSkill === "function")
+    ? getRankUpDelayAfterSkill()
+    : 0;
+
+  // 落下が終わった後なら止まっても自然。
+  // ただしスキルボイスが残っている間は、覚醒ボイスを被せない。
+  animState = "skill_pause";
+
+  setTimeout(()=>{
+    try{ runPendingRankUpAwakenAfterDrop(); }catch(_){}
+  }, Math.max(180, wait));
+}else{
+  animState = "idle";
+}
+}
       }
       break;
   }
@@ -7522,7 +8160,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 888; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 5; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -7928,12 +8566,18 @@ function showShuraSkillCutin(kind){
 
     overlay.classList.add('active');
 
-    clearTimeout(window.__shuraSkillCutinTimer);
-    window.__shuraSkillCutinTimer = setTimeout(()=>{
-      try{
-        overlay.classList.remove('active');
-      }catch(_){}
-    }, 520);
+/* ★スキル演出の終了予定時刻を記録：ランクアップ演出が割り込まないため */
+try{
+  const now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+  window.__shuraSkillCutinUntil = now + 1450;
+}catch(_){}
+
+clearTimeout(window.__shuraSkillCutinTimer);
+window.__shuraSkillCutinTimer = setTimeout(()=>{
+  try{
+    overlay.classList.remove('active');
+  }catch(_){}
+    }, 1450);
   }catch(_){}
 }
 </script>
