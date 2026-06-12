@@ -760,6 +760,37 @@ html, body{
   box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 40px rgba(120,200,255,0.35);
   display: none;
 }
+
+#allmaxPoem{
+  display:none;
+  margin: 8px auto 10px;
+  text-align: center;
+  line-height: 1.45;
+  letter-spacing: 0.12em;
+  color: #f3eee6;
+
+  font-family:
+    "Yuji Syuku",
+    "HGS行書体",
+    "HGP行書体",
+    "Yu Mincho",
+    "Hiragino Mincho ProN",
+    "Noto Serif JP",
+    serif;
+
+  font-size: clamp(16px, 2.2vw, 22px);
+  font-weight: 500;
+  white-space: nowrap;
+
+  text-shadow:
+    0 0 4px rgba(0,0,0,.75),
+    0 0 10px rgba(65,105,225,.18);
+}
+
+#allmaxOverlay.allmax-unlocked #allmaxPoem{
+  display:block;
+}
+
 #allmaxClose{
   position: absolute;
   top: 10px;
@@ -1568,7 +1599,7 @@ text-shadow:
     linear-gradient(180deg, rgba(0,0,0,.18), rgba(105,0,0,.28));
 
   opacity:0;
-  animation:finalMaxBgIn 4.8s ease-out forwards;
+  animation:finalMaxBgIn 6.8s ease-out forwards;
 }
 
 #finalRankMaxCeremony.out{
@@ -1582,7 +1613,7 @@ text-shadow:
   height:min(92vw, 430px);
   transform:scale(.86);
   opacity:0;
-  animation:finalMaxStageIn 4.2s ease-out forwards;
+  animation:finalMaxStageIn 6.2s ease-out forwards;
 }
 
 /* 中央エンブレム：5体より下のレイヤー */
@@ -1590,13 +1621,14 @@ text-shadow:
   position:absolute;
   left:50%;
   top:50%;
-  width:clamp(118px, 34vw, 190px);
-  height:clamp(118px, 34vw, 190px);
+//エンブレム表示サイズ
+  width:clamp(236px, 68vw, 380px);
+  height:clamp(236px, 68vw, 380px);
   transform:translate(-50%, -50%) scale(.86);
   object-fit:contain;
   z-index:1;
 
-  opacity:.52;
+  opacity:.62;
   filter:
     drop-shadow(0 0 10px rgba(255,40,40,.65))
     drop-shadow(0 0 20px rgba(65,105,225,.62))
@@ -1609,8 +1641,8 @@ text-shadow:
   position:absolute;
   left:50%;
   top:50%;
-  width:clamp(70px, 18vw, 112px);
-  height:clamp(70px, 18vw, 112px);
+  width:clamp(82px, 21vw, 132px);
+height:clamp(82px, 21vw, 132px);
   object-fit:contain;
   z-index:2;
 
@@ -1626,42 +1658,43 @@ text-shadow:
 
 /* 上 */
 #finalRankMaxCeremony .final-max-rank.r0{
-  transform:translate(-50%, -50%) translate(0, -150%) scale(.92);
+  transform:translate(-50%, -50%) translate(0, -175%) scale(.92);
   animation-delay:.10s;
 }
 
 /* 右上 */
 #finalRankMaxCeremony .final-max-rank.r1{
-  transform:translate(-50%, -50%) translate(130%, -48%) scale(.92);
+  transform:translate(-50%, -50%) translate(152%, -62%) scale(.92);
   animation-delay:.20s;
 }
 
 /* 右下 */
 #finalRankMaxCeremony .final-max-rank.r2{
-  transform:translate(-50%, -50%) translate(82%, 118%) scale(.92);
+  transform:translate(-50%, -50%) translate(96%, 138%) scale(.92);
   animation-delay:.30s;
 }
 
 /* 左下 */
 #finalRankMaxCeremony .final-max-rank.r3{
-  transform:translate(-50%, -50%) translate(-82%, 118%) scale(.92);
+  transform:translate(-50%, -50%) translate(-96%, 138%) scale(.92);
   animation-delay:.40s;
 }
 
 /* 左上 */
 #finalRankMaxCeremony .final-max-rank.r4{
-  transform:translate(-50%, -50%) translate(-130%, -48%) scale(.92);
+  transform:translate(-50%, -50%) translate(-152%, -62%) scale(.92);
   animation-delay:.50s;
 }
 
 #finalRankMaxCeremony .final-max-title{
   position:absolute;
   left:50%;
-  bottom:clamp(8px, 3vw, 18px);
-  transform:translateX(-50%);
-  z-index:3;
+  top:61%;
+  bottom:auto;
+  transform:translate(-50%, -50%);
+  z-index:4;
 
-  width:100%;
+  width:72%;
   text-align:center;
   white-space:nowrap;
 
@@ -1674,9 +1707,9 @@ text-shadow:
     "Noto Serif JP",
     serif;
 
-  font-size:clamp(38px, 10vw, 78px);
+  font-size:clamp(32px, 8.2vw, 64px);
   font-weight:900;
-  letter-spacing:.04em;
+  letter-spacing:.03em;
   color:#fff6e8;
   -webkit-text-fill-color:#fff6e8;
   -webkit-text-stroke:0 transparent;
@@ -1692,7 +1725,7 @@ text-shadow:
     0 0 42px rgba(0,0,0,1);
 
   opacity:0;
-  animation:finalMaxTitleIn 4.2s ease-out forwards;
+  animation:finalMaxTitleIn 6.2s ease-out forwards;
   animation-delay:.62s;
 }
 
@@ -1736,10 +1769,24 @@ text-shadow:
 }
 
 @keyframes finalMaxTitleIn{
-  0%{ opacity:0; transform:translateX(-50%) translateY(12px) scale(.82); filter:blur(4px); }
-  24%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1.08); filter:blur(0); }
-  76%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1.0); }
-  100%{ opacity:1; transform:translateX(-50%) translateY(-2px) scale(1.03); }
+  0%{
+    opacity:0;
+    transform:translate(-50%, -42%) scale(.82);
+    filter:blur(4px);
+  }
+  24%{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1.08);
+    filter:blur(0);
+  }
+  76%{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1.0);
+  }
+  100%{
+    opacity:1;
+    transform:translate(-50%, -53%) scale(1.03);
+  }
 }
 
 @keyframes finalMaxRing{
@@ -1814,8 +1861,8 @@ text-shadow:
 
 #maxTitleCeremony .max-title-sub{
   margin-top:16px;
-  font-size:clamp(13px, 3.2vw, 20px);
-  letter-spacing:.16em;
+  font-size:clamp(17px, 4.4vw, 30px);
+  letter-spacing:.12em;
   color:#ffb5a8;
   text-shadow:
     0 0 8px rgba(180,20,20,.85),
@@ -3623,8 +3670,8 @@ const IMG = {
   "PATH_J_NEM": "images/nemu.png",
   "PATH_J_SHI": "images/shinjuro.png",
   "PATH_J_PRO": "images/propaganda.png",
-  "MAX_EMBLEM": new Image(),
-  "PATH_MAX_EMBLEM": "images/max_emblem.png",
+"MAX_EMBLEM": new Image(),
+"PATH_MAX_EMBLEM": "images/max_emblem.png",
   "BG": new Image(), "PATH_BG": "images/boad_bg.png"
 };
 
@@ -4148,7 +4195,7 @@ const JUSO_BREAK_POINTS = {
   J_SHI: 30,
   J_PRO: 50
 };
-const RANK_THRESH = [5, 5, 5, 5, 5];//アンノウン到達までのランクアップ闘値
+const RANK_THRESH = [3, 3, 3, 3, 3];//アンノウン到達までのランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 20, "S_NE0": 30, "S_SHU": 40, "S_REQ": 50, "S_UNK": 80 };
 const SHUFFLE_PENALTY = 50; // 盤面詰みシャッフル時の暗躍値ペナルティ
 const SPECIAL_MAP = {
@@ -4541,25 +4588,23 @@ function playFinalRankMAXCeremony(){
     stage.appendChild(emblem);
 
     // 修羅王丸5種：RANKSの5キーをそのまま使う。五角形の並び
-    const keys = (typeof RANKS !== "undefined" && Array.isArray(RANKS))
-      ? RANKS.map(r => r.key)
-      : ["S_UNK", "S_REQ", "S_BIR", "S_NE0", "S_SHU"];
+    const rankSkillImages = [
+  { cls: "r0", src: "images/special_unk_skill.png" }, // 上
+  { cls: "r1", src: "images/special_req_skill.png" }, // 右上
+  { cls: "r2", src: "images/special_bir_skill.png" }, // 右下
+  { cls: "r3", src: "images/special_ne0_skill.png" }, // 左下
+  { cls: "r4", src: "images/special_shu_skill.png" }  // 左上
+];
 
-    keys.slice(0, 5).forEach((key, i)=>{
-      try{
-        const img = document.createElement("img");
-        img.className = "final-max-rank r" + i;
-
-        if (typeof IMG !== "undefined" && IMG[key] && IMG[key].src){
-          img.src = IMG[key].src;
-        }else{
-          img.src = "images/" + key + ".png";
-        }
-ｓｓ
-        img.alt = "";
-        stage.appendChild(img);
-      }catch(_){}
-    });
+rankSkillImages.forEach((item)=>{
+  try{
+    const img = document.createElement("img");
+    img.className = "final-max-rank " + item.cls;
+    img.src = item.src;
+    img.alt = "";
+    stage.appendChild(img);
+  }catch(_){}
+});
 
     const title = document.createElement("div");
     title.className = "final-max-title";
@@ -4572,12 +4617,12 @@ function playFinalRankMAXCeremony(){
     // 表示後フェードアウト
     setTimeout(()=>{
       try{ root.classList.add("out"); }catch(_){}
-    }, 4800);
+    }, 6800);
 
     setTimeout(()=>{
       try{ root.remove(); }catch(_){}
       try{ window.__finalRankMaxCeremonyRunning = false; }catch(_){}
-    }, 5900);
+    }, 7900);
 
   }catch(_){
     try{ window.__finalRankMaxCeremonyRunning = false; }catch(__){}
@@ -4589,6 +4634,80 @@ try{
   window.playFinalRankMAXCeremony = playFinalRankMAXCeremony;
 }catch(_){}
 
+function schedulePendingFinalRankMaxCeremony(){
+  try{
+    if (!window.__pendingFinalRankMaxCeremony) return;
+    if (window.__finalRankMaxCeremonySchedulerActive) return;
+
+    window.__finalRankMaxCeremonySchedulerActive = true;
+
+    const check = ()=>{
+      try{
+        if (!window.__pendingFinalRankMaxCeremony){
+          window.__finalRankMaxCeremonySchedulerActive = false;
+          return;
+        }
+
+        const skillWait = (typeof getRankUpDelayAfterSkill === "function")
+          ? getRankUpDelayAfterSkill()
+          : 0;
+
+        const rankBusy =
+          (typeof isRankPriorityActive === "function" && isRankPriorityActive()) ||
+          !!window.__rankUpAwakenRunning ||
+          !!window.__maxTitleCeremonyRunning ||
+          !!window.__finalRankMaxCeremonyRunning;
+
+        const boardBusy =
+          typeof animState !== "undefined" &&
+          animState &&
+          animState !== "idle";
+
+        // スキル演出・スキルボイス・落下・他演出が残っていれば待つ
+        if (skillWait > 0 || rankBusy || boardBusy){
+          setTimeout(check, Math.max(220, Math.min(900, skillWait || 300)));
+          return;
+        }
+
+        window.__pendingFinalRankMaxCeremony = false;
+
+        // ★ここで初めてランクMAXボイスを再生
+        try{
+          if (window.playVoiceById) window.playVoiceById("vo_rank5");
+          else {
+            const v5 = document.getElementById("vo_rank5");
+            if (v5){
+              try{ v5.currentTime = 0; }catch(_){}
+              const pr = v5.play();
+              if (pr && pr.catch) pr.catch(()=>{});
+            }
+          }
+        }catch(_){}
+
+        // ★ここで初めて永遠の焦土演出
+        try{
+          if (typeof playFinalRankMAXCeremony === "function"){
+            playFinalRankMAXCeremony();
+          }else if (typeof window.playFinalRankMAXCeremony === "function"){
+            window.playFinalRankMAXCeremony();
+          }
+        }catch(_){}
+
+        setTimeout(()=>{
+          try{ window.__finalRankMaxCeremonySchedulerActive = false; }catch(_){}
+        }, 8200);
+
+      }catch(_){
+        try{ window.__finalRankMaxCeremonySchedulerActive = false; }catch(__){}
+      }
+    };
+
+    check();
+
+  }catch(_){
+    try{ window.__finalRankMaxCeremonySchedulerActive = false; }catch(__){}
+  }
+}
 
 function resetComboForNewMove(){
   comboCount = 0;
@@ -4957,7 +5076,7 @@ function playMaxTitleCeremony(){
     overlay.innerHTML = `
       <div class="max-title-core">
         <div class="max-title-main">永遠の観測者</div>
-        <div class="max-title-sub">すべての焦土を、見届けし者</div>
+        <div class="max-title-sub">すべての焦土を見届けし者</div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -4977,6 +5096,69 @@ function playMaxTitleCeremony(){
     }, 5800);
 
   }catch(_){}
+}
+
+function schedulePendingMaxTitleCeremony(){
+  try{
+    if (!window.__pendingMaxTitleCeremony) return;
+    if (window.__maxTitleCeremonySchedulerActive) return;
+
+    window.__maxTitleCeremonySchedulerActive = true;
+
+    const check = ()=>{
+      try{
+        if (!window.__pendingMaxTitleCeremony){
+          window.__maxTitleCeremonySchedulerActive = false;
+          return;
+        }
+
+        const rankBusy =
+          (typeof isRankPriorityActive === "function" && isRankPriorityActive()) ||
+          !!window.__rankUpAwakenRunning ||
+          !!window.__finalRankMaxCeremonyRunning;
+
+        const skillWait = (typeof getRankUpDelayAfterSkill === "function")
+          ? getRankUpDelayAfterSkill()
+          : 0;
+
+        const boardBusy =
+          typeof animState !== "undefined" &&
+          animState &&
+          animState !== "idle";
+
+        // ★スキルボイス・ランク演出・盤面処理が残っている間は待つ
+        if (rankBusy || boardBusy || skillWait > 0){
+          setTimeout(check, Math.max(220, Math.min(900, skillWait || 300)));
+          return;
+        }
+
+        // ★ここで初めて永遠の観測者演出を発動
+        window.__pendingMaxTitleCeremony = false;
+
+        try{
+          if (typeof startRankPriority === "function") startRankPriority(7600);
+        }catch(_){}
+
+        try{
+          if (typeof playMaxTitleCeremony === "function"){
+            playMaxTitleCeremony();
+          }
+        }catch(_){}
+
+        setTimeout(()=>{
+          try{ window.__maxTitleCeremonySchedulerActive = false; }catch(_){}
+        }, 7600);
+
+      }catch(_){
+        try{ window.__maxTitleCeremonySchedulerActive = false; }catch(__){}
+      }
+    };
+
+    check();
+
+  }catch(_){
+    try{ window.__maxTitleCeremonySchedulerActive = false; }catch(__){}
+  }
 }
 
 function updateScoresUI(){
@@ -5022,7 +5204,14 @@ if (titleEl) titleEl.textContent = currentTitle;
 if (currentTitle === "称号：永遠の観測者(MAX)" && !hasReachedMaxTitle){
   hasReachedMaxTitle = true;
   try{ store.set("hasReachedMaxTitle", true); }catch(_){}
-  try{ playMaxTitleCeremony(); }catch(_){}
+
+  // ★演出は即発動せず、スキル・落下・ランク演出後に発動予約
+  try{
+    window.__pendingMaxTitleCeremony = true;
+    if (typeof schedulePendingMaxTitleCeremony === "function"){
+      schedulePendingMaxTitleCeremony();
+    }
+  }catch(_){}
 
   // ★Apps Scriptへ称号MAX到達を報告
   try{ reportTitleComplete(); }catch(_){}
@@ -8160,7 +8349,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 5; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 3; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -8171,14 +8360,11 @@ if (ok){
         hasReachedMaxRank = true;
         try{ store && store.set('hasReachedMaxRank', true); }catch(_){}
         try{
-          if (window.playVoiceById) window.playVoiceById('vo_rank5');
-          else {
-            var v5 = document.getElementById('vo_rank5');
-            if (v5) { try{ v5.currentTime = 0; }catch(_){ } var pr = v5.play(); if (pr && pr.catch) pr.catch(()=>{}); }
-          }
-        }catch(_){}
-        try{ if (typeof window.playFinalRankMAXCeremony==='function') window.playFinalRankMAXCeremony(); }catch(_){}
-        try{ if (typeof playFinalRankMAXCeremony==='function') playFinalRankMAXCeremony(); }catch(_){}
+  window.__pendingFinalRankMaxCeremony = true;
+  if (typeof schedulePendingFinalRankMaxCeremony === "function"){
+    schedulePendingFinalRankMaxCeremony();
+  }
+}catch(_){}
         try{ var row=document.getElementById('rankSelectRow'); if(row){ row.style.display=''; } }catch(_){}
         try{ if(typeof updateScoresUI==='function') updateScoresUI(); }catch(_){}
       }
@@ -8343,7 +8529,7 @@ window.shuffleBoard = function(){
 
     <div id="allmaxInputArea">
       <p id="allmaxMessage">
-        途方も無き孤独な戦いの末、<br>
+        途方も無く孤独な旅路の末、<br>
         最果ての称号に辿り着いた貴方。<br><br>
         修羅王丸と同じ景色を見た貴方に、<br>
         敬意を込めて「扉」を授けます。<br><br>
@@ -8357,7 +8543,10 @@ window.shuffleBoard = function(){
 
       <div id="allmaxError">貴方は"未だ"その資格を得てはいないようだ…</div>
     </div>
-
+<p id="allmaxPoem">
+  虚ろいし 問わず語りの 顔合わせ<br>
+  霧の廻廊 彷徨いて尚
+</p>
     <!-- Hidden image: do NOT set src until passcode succeeds -->
     <img id="allmaxImage" alt="ALL MAX" />
   </div>
