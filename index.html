@@ -787,21 +787,99 @@ html, body{
     0 0 10px rgba(65,105,225,.18);
 }
 
+#allmaxSpecialLink{
+  display:none;
+  margin:10px auto 0;
+  padding:8px 14px;
+  width:fit-content;
+
+  font-family:
+    "Yuji Syuku",
+    "HGS行書体",
+    "HGP行書体",
+    "Yu Mincho",
+    "Hiragino Mincho ProN",
+    "Noto Serif JP",
+    serif;
+
+  font-size:clamp(14px, 2.4vw, 18px);
+  letter-spacing:0.08em;
+  color:#eaf6ff;
+  text-decoration:none;
+
+  border:1px solid rgba(120,200,255,.42);
+  border-radius:999px;
+  background:rgba(0,0,0,.42);
+
+  text-shadow:
+    0 0 5px rgba(120,200,255,.75),
+    0 0 12px rgba(120,200,255,.28);
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.08) inset,
+    0 0 14px rgba(120,200,255,.22);
+
+  transition:
+    filter .18s ease,
+    transform .08s ease,
+    box-shadow .18s ease;
+}
+
+#allmaxSpecialLink:hover{
+  filter:brightness(1.12);
+  transform:translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12) inset,
+    0 0 18px rgba(120,220,255,.42);
+}
+
+#allmaxSpecialLink:active{
+  transform:translateY(0);
+}
+
+#allmaxOverlay.allmax-unlocked #allmaxSpecialLink{
+  display:inline-block;
+}
+
 #allmaxOverlay.allmax-unlocked #allmaxPoem{
   display:block;
 }
 
 #allmaxClose{
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 18px;
-  color: #bfe9ff;
-  cursor: pointer;
-  opacity: 0.8;
-  user-select: none;
+  position:absolute;
+  top:10px;
+  right:10px;
+
+  width:38px;
+  height:38px;
+
+  padding:0;
+  margin:0;
+  border:0;
+  outline:none;
+  background:transparent url("images/closebutton.png") center center / contain no-repeat;
+
+  cursor:pointer;
+  z-index:20;
+
+  appearance:none;
+  -webkit-appearance:none;
+
+  filter:
+    drop-shadow(0 0 5px rgba(0,0,0,.85))
+    drop-shadow(0 0 8px rgba(120,200,255,.35));
 }
-#allmaxClose:hover{ opacity: 1; }
+
+#allmaxClose:hover{
+  filter:
+    drop-shadow(0 0 5px rgba(0,0,0,.9))
+    drop-shadow(0 0 12px rgba(120,220,255,.6));
+  transform:scale(1.05);
+}
+
+#allmaxClose:active{
+  transform:scale(.96);
+}
 
 #titleLabel.allmax-ready{
   cursor: pointer;
@@ -938,7 +1016,7 @@ html, body{
 #allmaxOverlay.allmax-unlocked #allmaxImage{
   width:100% !important;
   max-width:100% !important;
-  max-height:88vh !important;
+  max-height:68vh !important;
   height:auto !important;
   object-fit:contain !important;
 }
@@ -1768,7 +1846,7 @@ height:clamp(82px, 21vw, 132px);
 #finalRankMaxCeremony .final-max-title{
   position:absolute;
   left:50%;
-  top:56%;
+  top:61%;
   bottom:auto;
   transform:translate(-50%, -50%);
   z-index:4;
@@ -1786,7 +1864,7 @@ height:clamp(82px, 21vw, 132px);
     "Noto Serif JP",
     serif;
 
-  font-size:clamp(30px, 8.5vw, 64px);
+  font-size:clamp(32px, 8.2vw, 64px);
   font-weight:900;
   letter-spacing:.03em;
   color:#fff6e8;
@@ -4274,7 +4352,7 @@ const JUSO_BREAK_POINTS = {
   J_SHI: 30,
   J_PRO: 50
 };
-const RANK_THRESH = [3, 3, 3, 3, 3];//アンノウン到達までのランクアップ闘値
+const RANK_THRESH = [10, 80, 300, 500, 700];//アンノウン到達までのランクアップ闘値
 const SPECIAL_POINTS = { "S_BIR": 20, "S_NE0": 30, "S_SHU": 40, "S_REQ": 50, "S_UNK": 80 };
 const SHUFFLE_PENALTY = 50; // 盤面詰みシャッフル時の暗躍値ペナルティ
 const SPECIAL_MAP = {
@@ -4713,6 +4791,7 @@ try{
   window.playFinalRankMAXCeremony = playFinalRankMAXCeremony;
 }catch(_){}
 
+
 function schedulePendingFinalRankMaxCeremony(){
   try{
     if (!window.__pendingFinalRankMaxCeremony) return;
@@ -4937,12 +5016,12 @@ function getComboInfo(n){
 
 function getTitleByScore(s){
    if (s < 1000) return "称号：名も無き欠片(1/8)";
-  if (s < 2000) return "称号：影の放浪者(2/8)";
-  if (s < 3000) return "称号：業火の修験者(3/8)";
-  if (s < 4000) return "称号：比良坂の防人(4/8)";
-  if (s < 5000) return "称号：黄昏の審問官(5/8)";
-  if (s < 6000) return "称号：血煙の傍観者(6/8)";
-  if (s < 7000) return "称号：無明の支配者(7/8)";
+  if (s < 5000) return "称号：影の放浪者(2/8)";
+  if (s < 20000) return "称号：業火の修験者(3/8)";
+  if (s < 50000) return "称号：比良坂の防人(4/8)";
+  if (s < 100000) return "称号：黄昏の審問官(5/8)";
+  if (s < 300000) return "称号：血煙の傍観者(6/8)";
+  if (s < 1000000) return "称号：無明の支配者(7/8)";
   return "称号：永遠の観測者(MAX)";
 }
 
@@ -5155,7 +5234,7 @@ function playMaxTitleCeremony(){
     overlay.innerHTML = `
       <div class="max-title-core">
         <div class="max-title-main">永遠の観測者</div>
-        <div class="max-title-sub">すべての焦土を見届けし者</div>
+        <div class="max-title-sub">すべての焦土を、見届けし者</div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -8421,7 +8500,7 @@ if (ok){
   })();
 
   // ---------- Unknown gating (闘値) ----------
-  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 3; }
+  if (typeof window.UNKNOWN_THRESH === 'undefined') { window.UNKNOWN_THRESH = 888; }
   if (typeof window.unknownStageProgress === 'undefined') {
     window.unknownStageProgress = (typeof store !== 'undefined' && store) ? store.get('unknownStageProgress', 0) : 0;
   }
@@ -8592,10 +8671,11 @@ window.shuffleBoard = function(){
 })();
 </script>
 
+
 <!-- ALL MAX Overlay -->
 <div id="allmaxOverlay" aria-hidden="true">
  <div id="allmaxPanel">
-    <button id="allmaxClose" type="button">×</button>
+   <button id="allmaxClose" type="button" aria-label="閉じる"></button>
  
 <p id="allmaxPoem">
   虚ろいし 問わず語りの 顔合わせ<br>
@@ -8604,9 +8684,18 @@ window.shuffleBoard = function(){
 
 <!-- Hidden image: do NOT set src until passcode succeeds -->
     <img id="allmaxImage" alt="ALL MAX" />
+
+<a
+  id="allmaxSpecialLink"
+  href="https://sites.google.com/view/shura-match3-secret888-2010gn/"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  ≪廻廊の最果て≫へ
+</a>
+
   </div>
 </div>
-
 
 <script>
 /* iOS: forcibly hide all volume sliders (range inputs), keep ON/OFF buttons */
