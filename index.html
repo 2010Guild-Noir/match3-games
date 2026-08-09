@@ -2508,7 +2508,7 @@ setTimeout(()=>{
       body: JSON.stringify(payload),
       cache: "no-store",
     });
-    if (!res.ok) throw new Error("API通信に失敗しました（HTTP " + res.status + "）");
+    if (!res.ok) throw new Error("API通信に失敗しました。もう一度パスキーを入力してください。パスキーが使用できない場合、事務局にご連絡ください。（HTTP " + res.status + "）");
     return await res.json();
   }
 
@@ -5112,18 +5112,22 @@ function schedulePendingFinalRankMaxCeremony(){
           ? getRankUpDelayAfterSkill()
           : 0;
 
-        const rankBusy =
-          (typeof isRankPriorityActive === "function" && isRankPriorityActive()) ||
-          !!window.__rankUpAwakenRunning ||
-          !!window.__maxTitleCeremonyRunning ||
-          !!window.__finalRankMaxCeremonyRunning;
+  const rankBusy =
+  (typeof isRankPriorityActive === "function" && isRankPriorityActive()) ||
+  !!window.__rankUpAwakenRunning ||
+  !!window.__maxTitleCeremonyRunning ||
+  !!window.__finalRankMaxCeremonyRunning;
 
+const boardBusy =
+  typeof animState !== "undefined" &&
+  animState &&
+  animState !== "idle";
 
-        // スキル演出・スキルボイス・落下・他演出が残っていれば待つ
-        if (skillWait > 0 || rankBusy || boardBusy){
-          setTimeout(check, Math.max(220, Math.min(900, skillWait || 300)));
-          return;
-        }
+// スキル演出・スキルボイス・落下・他演出が残っていれば待つ
+if (skillWait > 0 || rankBusy || boardBusy){
+  setTimeout(check, Math.max(220, Math.min(900, skillWait || 300)));
+  return;
+}
 
         window.__pendingFinalRankMaxCeremony = false;
 
@@ -5158,7 +5162,7 @@ function schedulePendingFinalRankMaxCeremony(){
       }
     };
 
-    check();
+    setTimeout(check, 240);
 
   }catch(_){
     try{ window.__finalRankMaxCeremonySchedulerActive = false; }catch(__){}
