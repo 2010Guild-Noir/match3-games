@@ -3414,8 +3414,27 @@ const Sound={
   },
   play(n, volMul=1){
     if(!this.enabled) return;
-    const p=this.pools[n];
-    if(!p) return;
+
+ // ★iPhone救済：SE軽量モード
+  // 最初から全部止めるのではなく、重くなりやすいSEだけ間引く
+  try{
+    const iosLightSE =
+      typeof IS_IOS !== "undefined" &&
+      IS_IOS &&
+      store.get("iosLightSE", true);
+
+    if (iosLightSE){
+      const block = {
+        pop:true,
+        rumble:true
+      };
+
+      if (block[n]) return;
+    }
+  }catch(_){}
+
+  const p=this.pools[n];
+  if(!p) return;
 
     // rumbleは同フレーム多重発火で加算的に大きくなりやすいのでレート制限
     if (n==="rumble"){
