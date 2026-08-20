@@ -2258,7 +2258,7 @@ height:clamp(82px, 21vw, 132px);
 
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw7eELMc8rQ5AT4700vi7skMyIVha7GJ-s5vzFR5qsMSNcSpYS5b55c7VnY8E5kcvWVBw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx0aG80GdC10F1l_2GjQRedSHNi-oesBDhcWLYiQjzvUonBfF_dJ9yck4Q1hi4sEABZ/exec";
   const LS_UNLOCKED = "supporter_unlocked_v1";
 
   function normalizePasscode(s){
@@ -2547,16 +2547,80 @@ setTimeout(()=>{
       const data = await apiPost({
         action: "complete",
         passcode: pass,
-        title: "永遠の観測者"
+        title: "称号MAX"
       });
 
       if (data && data.ok){
-        localStorage.setItem("title_complete_reported_v1", "1");
+        localStorage.setItem("title_complete_reported_v2", "1");
       }
     }catch(e){
       console.warn("complete report failed", e);
     }
   }
+
+// ★永遠の焦土到達をApps Scriptへ報告
+async function reportFinalRankMaxOnce(){
+  try{
+    const pass = localStorage.getItem("supporter_player_id_v1");
+    if (!pass) return;
+
+    // 同じ端末から何度も報告しない
+    const alreadyReported = localStorage.getItem("final_rank_max_reported_v2");
+    if (alreadyReported === "1") return;
+
+    const finalRankMax =
+      typeof hasReachedMaxRank !== "undefined" &&
+      hasReachedMaxRank === true;
+
+    if (!finalRankMax) return;
+
+    const data = await apiPost({
+      action: "reportFinalRankMax",
+      passcode: pass
+    });
+
+    if (data && data.ok){
+      localStorage.setItem("final_rank_max_reported_v1", "1");
+    }
+  }catch(e){
+    console.warn("final rank max report failed", e);
+  }
+}
+
+
+// ★真complete到達をApps Scriptへ報告
+async function reportTrueCompleteOnce(){
+  try{
+    const pass = localStorage.getItem("supporter_player_id_v1");
+    if (!pass) return;
+
+    // 同じ端末から何度も報告しない
+    const alreadyReported = localStorage.getItem("true_complete_reported_v2");
+    if (alreadyReported === "1") return;
+
+    const titleMax =
+      typeof isTitleMaxReached === "function" &&
+      isTitleMaxReached();
+
+    const finalRankMax =
+      typeof hasReachedMaxRank !== "undefined" &&
+      hasReachedMaxRank === true;
+
+    if (!titleMax || !finalRankMax) return;
+
+    const data = await apiPost({
+      action: "reportTrueComplete",
+      passcode: pass
+    });
+
+    if (data && data.ok){
+      localStorage.setItem("true_complete_reported_v1", "1");
+    }
+  }catch(e){
+    console.warn("true complete report failed", e);
+  }
+}
+
 
   async function unlock(){
     setMsg("", "");
@@ -5869,7 +5933,11 @@ if (currentTitle === "称号：永遠の観測者(MAX)" && !hasReachedMaxTitle){
   }catch(_){}
 
   // ★Apps Scriptへ称号MAX到達を報告
-  try{ reportTitleComplete(); }catch(_){}
+try{ reportTitleComplete(); }catch(_){}
+
+// ★Apps Scriptへ永遠の焦土・真complete到達を報告
+try{ reportFinalRankMaxOnce(); }catch(_){}
+try{ reportTrueCompleteOnce(); }catch(_){}
 }
 
 // ★もし過去に予約だけ残っていたら、UI更新時に必ず拾う
